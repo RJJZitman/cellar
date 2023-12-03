@@ -64,4 +64,4 @@ if __name__ == "__main__":
         print(db.execute_query_select("show databases;"))
         db.execute_query("drop database if exists cellar;")
         db.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_databases.sql')
-        print(db.execute_query_select("show databases;"))
+        db.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_tables.sql')
