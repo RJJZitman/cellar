@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS cellar.cellar(
      wine_id INT,
      storage_unit INT,
      owner_id INT,
+     bottle_size_cl INT,
      quantity int,
      PRIMARY KEY (id)
 );

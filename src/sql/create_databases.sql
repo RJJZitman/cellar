@@ -1,1 +1,1 @@
-create database if not exists cellar;
+CREATE DATABASE IF NOT EXISTS cellar;

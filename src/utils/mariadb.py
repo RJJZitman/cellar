@@ -40,22 +40,29 @@ class MariaDB:
         engine = create_engine(connection_string)
         return engine
 
+    def execute_queries(self, queries: str) -> None:
+        for query in queries.split(';')[:-1]:
+            self.execute_query(query=f"{query};")
+
     def execute_query(self, query: str) -> None:
         try:
-            self.cursor.execute(query)
+            self.cursor.execute(operation=query)
             self.connection.commit()
         except Exception as e:
             print(f"Error executing query: {e}")
             self.connection.rollback()
 
     def execute_query_select(self, query: str) -> Any:
-        self.cursor.execute(query)
+        self.cursor.execute(operation=query)
         result = self.cursor.fetchall()
         return result
 
-    def execute_sql_file(self, file_path: str) -> None:
+    def execute_sql_file(self, file_path: str, multi: bool = False) -> None:
         with open(file=file_path, mode='r') as sql_file:
-            self.execute_query(query=sql_file.read())
+            if multi:
+                self.execute_queries(queries=sql_file.read())
+            else:
+                self.execute_query(query=sql_file.read())
 
 
 if __name__ == "__main__":
@@ -64,4 +71,5 @@ if __name__ == "__main__":
         print(db.execute_query_select("show databases;"))
         db.execute_query("drop database if exists cellar;")
         db.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_databases.sql')
-        db.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_tables.sql')
+        db.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_tables.sql',
+                            multi=True)
