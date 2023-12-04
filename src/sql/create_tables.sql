@@ -21,17 +21,10 @@ CREATE TABLE IF NOT EXISTS cellar.storages(
      PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS cellar.storages(
-     id INT NOT NULL AUTO_INCREMENT,
-     owner_id INT,
-     location VARCHAR(200),
-     description VARCHAR(2000),
-     PRIMARY KEY (id)
-);
-
 CREATE TABLE IF NOT EXISTS cellar.ratings(
      id INT NOT NULL AUTO_INCREMENT,
      rater_id INT,
+     wine_id INT,
      rating SMALLINT,
      drinking_date DATE,
      comments VARCHAR(2000),
