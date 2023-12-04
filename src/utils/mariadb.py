@@ -15,6 +15,9 @@ class MariaDB:
         self.connection: Optional[Connection] = None
         self.cursor: Optional[DBAPICursor] = None
 
+        self.connection_string = f"mysql+mysqlconnector://" \
+                                 f"{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
+
     def __enter__(self):
         self._initiate_connection()
         return self
@@ -36,8 +39,7 @@ class MariaDB:
 
     def engine_connect(self) -> Engine:
         # Use SQLAlchemy to create a MariaDB engine
-        connection_string = f"mysql+mysqlconnector://{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
-        engine = create_engine(connection_string)
+        engine = create_engine(self.connection_string)
         return engine
 
     def execute_queries(self, queries: str) -> None:
@@ -70,6 +72,7 @@ if __name__ == "__main__":
     with MariaDB(user='Rogier', password='your_password', database='') as db:
         print(db.execute_query_select("show databases;"))
         db.execute_query("drop database if exists cellar;")
+        print(db.execute_query_select("show databases;"))
         db.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_databases.sql')
         db.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_tables.sql',
                             multi=True)
