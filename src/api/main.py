@@ -14,11 +14,16 @@ from fastapi_pagination import add_pagination
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.responses import RedirectResponse, Response
 
+from .utils import db_setup
+from .models import DbConnModel
+
 app = FastAPI(title='Wine Cellar API',
               description='API to access your wine cellar data',
               version="0.1.0")#,
               # docs_url=None, redoc_url=None, openapi_url=f"/drink_your_wine")
 add_pagination(app)
+
+db_setup(db_creds=DbConnModel(**{'user': 'Rogier', 'password': 'your_password'}))
 
 
 @app.get('/')

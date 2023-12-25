@@ -1,8 +1,13 @@
+import os
+import time
+
 from typing import Optional, Any
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.base import Connection, DBAPICursor
+
+from .models import DbConnModel
 
 
 class MariaDB:
@@ -67,12 +72,41 @@ class MariaDB:
                 self.execute_query(query=sql_file.read())
 
 
-if __name__ == "__main__":
-    # Replace 'your_password' with the actual password for the 'Rogier' user
-    with MariaDB(user='Rogier', password='your_password', database='') as db:
-        print(db.execute_query_select("show databases;"))
-        db.execute_query("drop database if exists cellar;")
-        print(db.execute_query_select("show databases;"))
-        db.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_databases.sql')
-        db.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_tables.sql',
-                            multi=True)
+def database_service() -> None:
+    os.system('brew services restart mariadb')
+    time.sleep(15)
+
+
+def setup_new_database(db_conn: MariaDB) -> None:
+    print(db_conn.execute_query_select("show databases;"))
+    db_conn.execute_query("drop database if exists cellar;")
+    print(db_conn.execute_query_select("show databases;"))
+    db_conn.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_databases.sql')
+    db_conn.execute_sql_file(file_path='/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/sql/create_tables.sql',
+                             multi=True)
+    print(db_conn.execute_query_select("show databases;"))
+
+
+def check_for_cellar_db(db_conn: MariaDB) -> bool:
+    existing_dbs = db_conn.execute_query_select("show databases")
+    if sum([1 for existing_db in existing_dbs if existing_db[0] == "cellar"]):
+        print("cellar DB has been found")
+        return True
+    else:
+        return False
+
+
+def check_for_admin_user(db_conn: MariaDB) -> None:
+    owners = db_conn.execute_query_select(query="SELECT * FROM cellar.owners")
+    if not owners:
+        print("No wine owners are found, DB is being re-instantiated")
+        setup_new_database(db_conn=db_conn)
+
+
+def db_setup(db_creds: DbConnModel) -> None:
+    database_service()
+    with MariaDB(**db_creds.model_dump()) as db:
+        if check_for_cellar_db(db_conn=db):
+            check_for_admin_user(db_conn=db)
+        else:
+            setup_new_database(db_conn=db)
