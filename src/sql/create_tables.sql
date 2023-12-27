@@ -11,6 +11,11 @@ CREATE TABLE IF NOT EXISTS cellar.cellar(
 CREATE TABLE IF NOT EXISTS cellar.owners(
      id INT NOT NULL AUTO_INCREMENT,
      name VARCHAR(200),
+     username VARCHAR(100) NOT NULL,
+     password VARCHAR(100) NOT NULL,
+     scopes VARCHAR(100),
+     is_admin BOOL NOT NULL DEFAULT 0,
+     enabled BOOL NOT NULL DEFAULT 1,
      PRIMARY KEY (id)
 );
 
