@@ -120,7 +120,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
+src/.env
 .venv
 env/
 venv/
@@ -162,3 +162,4 @@ cython_debug/
 .idea/
 CellarVenv
 /drivers
+*env.yml

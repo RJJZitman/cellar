@@ -96,17 +96,17 @@ def check_for_cellar_db(db_conn: MariaDB) -> bool:
         return False
 
 
-def check_for_admin_user(db_conn: MariaDB) -> None:
+def check_for_admin_user(db_conn: MariaDB) -> bool:
     owners = db_conn.execute_query_select(query="SELECT * FROM cellar.owners")
-    if not owners:
+    if owners:
+        return True
+    else:
         print("No wine owners are found, DB is being re-instantiated")
-        setup_new_database(db_conn=db_conn)
+        return False
 
 
 def db_setup(db_creds: DbConnModel) -> None:
     database_service()
     with MariaDB(**db_creds.model_dump()) as db:
-        if check_for_cellar_db(db_conn=db):
-            check_for_admin_user(db_conn=db)
-        else:
+        if not (check_for_cellar_db(db_conn=db) and check_for_admin_user(db_conn=db)):
             setup_new_database(db_conn=db)
