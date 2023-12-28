@@ -2,13 +2,10 @@ import os
 import time
 import yaml
 
-from .constants import SRC
+from .constants import SRC, SQL
 from .db_utils import MariaDB
 from .models import DbConnModel
 from .authentication import get_password_hash
-
-
-SQL = f'{SRC}sql/'
 
 
 def database_service() -> None:
@@ -29,9 +26,11 @@ def setup_new_database(db_conn: MariaDB) -> None:
 def make_db_admin_user(db_conn: MariaDB) -> None:
     with open(f'{SRC}env.yml', 'r') as file:
         env = yaml.safe_load(file)
-
-    db_conn.execute_query(query=f"INSERT INTO cellar.owners (username, password, scopes, is_admin, enabled) VALUES"
-                                f"({env['DB_USER']}, '{get_password_hash(password=env['DB_PW'])}', '', 1, 1);")
+    print(db_conn.execute_query_select("select * from cellar.owners"))
+    db_conn.execute_query(query=f"INSERT INTO cellar.owners (name, username, password, scopes, is_admin, enabled) VALUES "
+                                f"('{env['DB_USER_NAME']}', '{env['DB_USER']}', "
+                                f"'{get_password_hash(password=env['DB_PW'])}', '', 1, 1)")
+    print(db_conn.execute_query_select("select * from cellar.owners where username='Rogier'"))
 
 
 def check_for_cellar_db(db_conn: MariaDB) -> bool:

@@ -20,7 +20,7 @@ def get_request_body_with_explode(*,
     """
     Monkeypatch to fix swagger UI bug: https://github.com/tiangolo/fastapi/issues/3532
     Without this monkeypatch, form data input does not work properly in Swagger UI when allowing the selection of
-    multiple arguments (i.e. selecting one or more scopes from a specief list of options)
+    multiple arguments (i.e. selecting one or more scopes from a specic list of options)
     """
     original = orig_get_request_body(body_field=body_field, model_name_map=model_name_map)
     if not original:

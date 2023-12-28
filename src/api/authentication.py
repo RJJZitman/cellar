@@ -1,5 +1,3 @@
-import os
-
 from typing import Annotated
 from datetime import timedelta, datetime
 
@@ -12,16 +10,14 @@ from fastapi.security import SecurityScopes
 from .db_utils import MariaDB
 from .dependencies import DBConnDep
 from .auth_utils import OAuth2PasswordBearerCookie
-from .constants import JWT_KEY, ALGORITHM, SCOPES
-from .models import DbConnModel, OwnerDbModel, OwnerModel, TokenData
+from .constants import JWT_KEY, ALGORITHM, SCOPES, DB_CREDS
+from .models import OwnerDbModel, OwnerModel, TokenData
 
 
-auth_db_conn = DBConnDep(DbConnModel(user=os.environ.get('DB_USER', ''),
-                                     password=os.environ.get('DB_PW', ''))
-                         )
+auth_db_conn = DBConnDep(DB_CREDS)
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
-oauth2_scheme = OAuth2PasswordBearerCookie(token_url='user/token', scopes=SCOPES)
+oauth2_scheme = OAuth2PasswordBearerCookie(token_url='users/token', scopes=SCOPES)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -32,7 +28,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     :param hashed_password: Hashed password
     :return: whether the provided hash matches the plain pw
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(secret=plain_password, hash=hashed_password)
 
 
 def get_password_hash(password: str) -> str:
@@ -70,9 +66,12 @@ def get_user(username: str, user_db: MariaDB) -> OwnerDbModel | None:
     :return: User model or None
     """
     try:
-        user = user_db.execute_query_select(query=f'select * from cellar.owners where username={username}')
+        user = user_db.execute_query_select(query=f"select * from cellar.owners where username='{username}'",
+                                            get_fields=True)
+        print(user)
         return OwnerDbModel(**user[0])
     except Exception as e:
+        print(e)
         return
 
 
@@ -87,6 +86,7 @@ def authenticate_user(username: str, password: str, user_db: MariaDB) -> OwnerDb
     :return: User model or False
     """
     user = get_user(username=username, user_db=user_db)
+    print(user, user.username, user.password)
     if not user:
         return False
     if not verify_password(plain_password=password, hashed_password=user.password):

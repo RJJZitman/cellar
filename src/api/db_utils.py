@@ -23,7 +23,7 @@ class MariaDB:
         return self
 
     def __exit__(self, *exc_info):
-        self._close_connection()
+        self._close_connection(commit=True)
 
     def _initiate_connection(self):
         # Use SQLAlchemy to create a connection to MariaDB
@@ -31,10 +31,12 @@ class MariaDB:
         self.connection = engine.connect()
         self.cursor = self.connection.connection.cursor()
 
-    def _close_connection(self):
+    def _close_connection(self, commit: bool = False):
         if self.cursor:
             self.cursor.close()
         if self.connection:
+            if commit:
+                self.connection.commit()
             self.connection.close()
 
     def engine_connect(self) -> Engine:
@@ -49,15 +51,19 @@ class MariaDB:
 
     def execute_query(self, query: str) -> None:
         try:
+            trans = self.connection.begin()
             self.cursor.execute(operation=query)
-            self.connection.commit()
+            trans.commit()
         except Exception as e:
             print(f"Error executing query: {e}")
             self.connection.rollback()
 
-    def execute_query_select(self, query: str) -> Any:
+    def execute_query_select(self, query: str, get_fields: bool = False) -> Any:
         self.cursor.execute(operation=query)
         result = self.cursor.fetchall()
+        if get_fields:
+            cols = self.cursor.column_names
+            result = [{col: value for col, value in zip(cols, row)} for row in result]
         return result
 
     def execute_sql_file(self, file_path: str, multi: bool = False) -> None:

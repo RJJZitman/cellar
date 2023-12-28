@@ -7,7 +7,12 @@ class DBConnDep:
         self.db_creds = db_creds.dict()
 
     def __call__(self):
-        with MariaDB(**self.db_creds) as db:
+        db = MariaDB(**self.db_creds)
+        try:
+            db._initiate_connection()
             print('DB conn has been established')
             yield db
+        finally:
+            db._close_connection()
             print('DB conn has been terminated')
+

@@ -15,10 +15,10 @@ from starlette.responses import RedirectResponse, Response
 from .db_utils import MariaDB
 from .auth_utils import BasicAuth
 from .db_initialisation import db_setup
-from .constants import ACCESS_TOKEN_EXPIRATION_MIN, OPENAPI_URL, SRC
+from .constants import ACCESS_TOKEN_EXPIRATION_MIN, OPENAPI_URL, SRC, DB_CREDS
 from .authentication import auth_db_conn, get_current_active_user, authenticate_user, create_access_token
+from .routers import users_router
 from .get_request_body_with_explode import get_request_body_with_explode
-from .models import DbConnModel
 
 
 # Monkeypatch to fix swagger UI bug: https://github.com/tiangolo/fastapi/issues/3532
@@ -32,8 +32,10 @@ add_pagination(app)
 
 with open(f'{SRC}env.yml', 'r') as file:
     env = yaml.safe_load(file)
-db_setup(db_creds=DbConnModel(user=env['DB_USER'], password=env['DB_PW']))
+db_setup(db_creds=DB_CREDS)
 basic_auth = BasicAuth(auto_error=False)
+
+app.include_router(users_router.router)
 
 
 @app.get('/')
@@ -49,7 +51,11 @@ async def login_for_docs(auth: Annotated[BasicAuth, Depends(basic_auth)],
     try:
         decoded = base64.b64decode(auth).decode("ascii")
         username, _, password = decoded.partition(":")
+        print(username, password)
+        print(user_db)
+        print(user_db.user, user_db.password, user_db)
         user = authenticate_user(username=username, password=password, user_db=user_db)
+        print("user is found")
         if not user:
             raise HTTPException(status_code=400, detail="Incorrect email or password")
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRATION_MIN)
@@ -62,6 +68,7 @@ async def login_for_docs(auth: Annotated[BasicAuth, Depends(basic_auth)],
                             expires=datetime.now(tz=timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRATION_MIN))
         return response
     except Exception as e:
+        print(e)
         response = Response(headers={"WWW-Authenticate": "Basic"}, status_code=401)
         return response
 
