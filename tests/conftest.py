@@ -1,5 +1,5 @@
 import os
-import yaml
+import json
 
 from typing import Any
 
@@ -11,10 +11,6 @@ from fastapi.testclient import TestClient
 from fastapi_pagination import add_pagination
 
 
-# from dotenv import load_dotenv
-# TEST_DIR = os.path.dirname(__file__)
-# load_dotenv(os.path.join(TEST_DIR, '.env_test'))
-
 from api import dependencies, db_initialisation, db_utils, constants
 
 SQLITE_DB_URL = 'sqlite://'
@@ -22,7 +18,7 @@ SQLITE_DB_URL = 'sqlite://'
 
 @pytest.fixture()
 def test_app(env_monkeypatch):
-    from api.main import app#, add_pagination
+    from api.main import app
     add_pagination(app)
     client = TestClient(app)
     yield client
@@ -32,9 +28,48 @@ def test_app(env_monkeypatch):
 def token_admin(test_app):
     response = test_app.post(url='/users/token', data={'username': 'admin',
                                                        'password': 'admin',
-                                                       'scope': 'USERS:READ'},
+                                                       'scope': 'USERS:READ USERS:WRITE'},
                              headers={"content-type": "application/x-www-form-urlencoded"})
-    print(response)
+    return response.json()
+
+
+@pytest.fixture()
+def new_user(test_app, token_admin):
+
+    def set_user_scopes(data: dict):
+        token = token_admin
+        test_app.post(url='/users/add',
+                      data=json.dumps(data),
+                      headers={"content-type": "application/json",
+                               "Authorization": f"Bearer {token['access_token']}"})
+        print(f"user with username: {data['username']} has been added")
+    return set_user_scopes
+
+
+@pytest.fixture()
+def token_cellar_read(test_app, token_admin):
+    def get_token(data: dict):
+        token = token_admin
+        print(token)
+        response = test_app.post(url='/users/token', data={'username': data['username'],
+                                                           'password': data['password'],
+                                                           'scope': data['scopes']},
+                                 # headers={"content-type": "application/x-www-form-urlencoded"})
+                                 headers={"content-type": "application/x-www-form-urlencoded",
+                                 # headers={"content-type": "application/json",
+                                          "Authorization": f"Bearer {token['access_token']}"})
+        print(response.json())
+        return response.json()
+
+    return get_token
+
+
+@pytest.fixture()
+def token_cellar_all(test_app):
+    response = test_app.post(url='/users/token', data={'username': 'cellar_all',
+                                                       'password': 'cellar_all',
+                                                       'scope': 'CELLAR:READ CELLAR:WRITE'},
+                             headers={"content-type": "application/x-www-form-urlencoded"})
     return response.json()
 
 
@@ -130,7 +165,7 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
         def _close_connection(self):
             pass
 
-    def mock_database_service():
+    def mock_database_service(*args, **kwargs):
         pass
 
     def mock_check_for_admin_user(*args, **kwargs):

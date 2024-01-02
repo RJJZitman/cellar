@@ -11,7 +11,7 @@ from ..db_utils import MariaDB
 from ..constants import ACCESS_TOKEN_EXPIRATION_MIN, SCOPES, DB_CONN
 from ..authentication import (authenticate_user, create_access_token, verify_scopes, get_password_hash,
                               get_current_active_user, get_user)
-from ..models import Token
+from ..models import Token, OwnerDbModel
 
 
 SCOPES_ENUM = Enum('ScopesType', ((s, s) for s in SCOPES.keys()), type=str)
@@ -73,4 +73,19 @@ async def get_extended_access_token(user_db: Annotated[MariaDB, Depends(DB_CONN)
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
-# @router.post('/add', dependencies=[Security(get_current_active_user, scopes=['users:write'])])
+@router.post('/add', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
+async def add_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
+                   owner_data: OwnerDbModel) -> str:
+    """
+    Add new wine owner to the DB
+    """
+    # validate if user exists
+    user = user_db.execute_query_select(f"SELECT * FROM cellar.owners WHERE username = '{owner_data.username}'")
+    if user:
+        raise HTTPException(status_code=400, detail=f"A user with username {owner_data.username} already exists")
+    user_db.execute_query(query=f"INSERT INTO cellar.owners (id, name, username, password, scopes, is_admin, enabled) "
+                                f"VALUES "
+                                f"('{owner_data.id}','{owner_data.name}', '{owner_data.username}', "
+                                f"'{owner_data.password}', '{owner_data.scopes}', '{owner_data.is_admin}', "
+                                f"'{owner_data.enabled}')")
+    return f"User with username {owner_data.username} has successfully been added to the DB"

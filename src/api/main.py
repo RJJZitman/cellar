@@ -1,4 +1,3 @@
-import os
 import yaml
 import base64
 
@@ -27,7 +26,7 @@ from .get_request_body_with_explode import get_request_body_with_explode
 fastapi.openapi.utils.get_openapi_operation_request_body = get_request_body_with_explode
 
 app = FastAPI(title='Wine Cellar API',
-              description='API to access your wine cellar data',
+              description='API to access your wine and beer cellar',
               version="0.1.0",
               docs_url=None, redoc_url=None, openapi_url=OPENAPI_URL)
 add_pagination(app)

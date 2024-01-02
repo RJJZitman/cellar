@@ -14,11 +14,12 @@ router = APIRouter(prefix="/cellar",
                    responses={404: {"description": "Not Found"}})
 
 
-@router.get("/owners/", response_model=list[OwnerModel], dependencies=[Security(get_current_active_user)])
+@router.get("/owners/get", response_model=list[OwnerModel], dependencies=[Security(get_current_active_user)])
 async def get_owners(db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
     """
     Retrieve all owners registered within the DB.
     """
+    print("hailloooo")
     return db_conn.execute_query_select(query='select * from cellar.owners', get_fields=True)
 
 

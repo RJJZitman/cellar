@@ -11,6 +11,7 @@ class OwnerModel(BaseModel):
 
 
 class OwnerDbModel(OwnerModel):
+    id: int | None = None
     password: str
 
 
