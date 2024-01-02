@@ -68,7 +68,6 @@ def get_user(username: str, user_db: MariaDB) -> OwnerDbModel | None:
     try:
         user = user_db.execute_query_select(query=f"select * from cellar.owners where username='{username}'",
                                             get_fields=True)
-        print(user)
         return OwnerDbModel(**user[0])
     except Exception as e:
         print(e)
@@ -86,7 +85,6 @@ def authenticate_user(username: str, password: str, user_db: MariaDB) -> OwnerDb
     :return: User model or False
     """
     user = get_user(username=username, user_db=user_db)
-    print(user, user.username, user.password)
     if not user:
         return False
     if not verify_password(plain_password=password, hashed_password=user.password):

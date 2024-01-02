@@ -14,13 +14,12 @@ def database_service() -> None:
 
 
 def setup_new_database(db_conn: MariaDB) -> None:
-    print(db_conn.execute_query_select("show databases;"))
     db_conn.execute_query("drop database if exists cellar;")
-    print(db_conn.execute_query_select("show databases;"))
     db_conn.execute_sql_file(file_path=f'{SQL}create_databases.sql')
+    print("hello")
     db_conn.execute_sql_file(file_path=f'{SQL}create_tables.sql',
                              multi=True)
-    print(db_conn.execute_query_select("show databases;"))
+    print("bye")
 
 
 def make_db_admin_user(db_conn: MariaDB) -> None:
@@ -30,7 +29,7 @@ def make_db_admin_user(db_conn: MariaDB) -> None:
     db_conn.execute_query(query=f"INSERT INTO cellar.owners (name, username, password, scopes, is_admin, enabled) VALUES "
                                 f"('{env['DB_USER_NAME']}', '{env['DB_USER']}', "
                                 f"'{get_password_hash(password=env['DB_PW'])}', '', 1, 1)")
-    print(db_conn.execute_query_select("select * from cellar.owners where username='Rogier'"))
+    print(db_conn.execute_query_select(f"select * from cellar.owners where username='{env['DB_USER_NAME']}'"))
 
 
 def check_for_cellar_db(db_conn: MariaDB) -> bool:

@@ -2,7 +2,7 @@ from typing import Optional, Any
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from sqlalchemy.engine.base import Connection, DBAPICursor
+from sqlalchemy.engine.base import Connection#, DBAPICursor
 
 
 class MariaDB:
@@ -13,7 +13,7 @@ class MariaDB:
         self.host = host
         self.port = port
         self.connection: Optional[Connection] = None
-        self.cursor: Optional[DBAPICursor] = None
+        self.cursor: Optional[Any] = None
 
         self.connection_string = f"mysql+mysqlconnector://" \
                                  f"{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
