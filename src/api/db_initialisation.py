@@ -2,31 +2,31 @@ import os
 import time
 import yaml
 
-from .constants import SRC, SQL
 from .db_utils import MariaDB
+from .constants import SRC, SQL
 from .models import DbConnModel
 from .authentication import get_password_hash
 
 
-def database_service() -> None:
-    os.system('brew services restart mariadb')
-    time.sleep(15)
+def database_service(restarted: bool = True) -> None:
+    if restarted:
+        os.system('brew services restart mariadb')
+        time.sleep(15)
 
 
 def setup_new_database(db_conn: MariaDB) -> None:
     db_conn.execute_query("drop database if exists cellar;")
     db_conn.execute_sql_file(file_path=f'{SQL}create_databases.sql')
-    print("hello")
     db_conn.execute_sql_file(file_path=f'{SQL}create_tables.sql',
                              multi=True)
-    print("bye")
 
 
 def make_db_admin_user(db_conn: MariaDB) -> None:
     with open(f'{SRC}env.yml', 'r') as file:
         env = yaml.safe_load(file)
     print(db_conn.execute_query_select("select * from cellar.owners"))
-    db_conn.execute_query(query=f"INSERT INTO cellar.owners (name, username, password, scopes, is_admin, enabled) VALUES "
+    db_conn.execute_query(query=f"INSERT INTO cellar.owners (name, username, password, scopes, is_admin, enabled) "
+                                f"VALUES "
                                 f"('{env['DB_USER_NAME']}', '{env['DB_USER']}', "
                                 f"'{get_password_hash(password=env['DB_PW'])}', '', 1, 1)")
     print(db_conn.execute_query_select(f"select * from cellar.owners where username='{env['DB_USER_NAME']}'"))
@@ -56,8 +56,8 @@ def check_for_admin_user(db_conn: MariaDB) -> bool:
         return False
 
 
-def db_setup(db_creds: DbConnModel) -> None:
-    database_service()
+def db_setup(db_creds: DbConnModel, restarted: bool = True) -> None:
+    database_service(restarted=restarted)
     with MariaDB(**db_creds.dict()) as db:
         if not check_for_cellar_db(db_conn=db):
             setup_new_database(db_conn=db)

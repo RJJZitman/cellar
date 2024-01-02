@@ -6,18 +6,20 @@ from typing import Annotated
 from datetime import datetime, timedelta, timezone
 
 import fastapi.openapi.utils
-from fastapi import FastAPI, Depends, HTTPException, Request
+
 from fastapi.encoders import jsonable_encoder
 from fastapi_pagination import add_pagination
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.responses import RedirectResponse, Response
+from fastapi import FastAPI, Depends, HTTPException, Request
 
 from .db_utils import MariaDB
 from .auth_utils import BasicAuth
 from .db_initialisation import db_setup
-from .constants import ACCESS_TOKEN_EXPIRATION_MIN, OPENAPI_URL, SRC, DB_CREDS
-from .authentication import auth_db_conn, get_current_active_user, authenticate_user, create_access_token
-from .routers import users_router
+from .routers import users_router, cellar_router
+from .constants import ACCESS_TOKEN_EXPIRATION_MIN, OPENAPI_URL, SRC, DB_CREDS, DB_CONN
+from .authentication import get_current_active_user, authenticate_user, create_access_token
+
 from .get_request_body_with_explode import get_request_body_with_explode
 
 
@@ -32,28 +34,26 @@ add_pagination(app)
 
 with open(f'{SRC}env.yml', 'r') as file:
     env = yaml.safe_load(file)
-db_setup(db_creds=DB_CREDS)
+db_setup(db_creds=DB_CREDS, restarted=False)
 basic_auth = BasicAuth(auto_error=False)
 
 app.include_router(users_router.router)
+app.include_router(cellar_router.router)
 
 
 @app.get('/')
 async def root():
-    return {"message": "Welcome to the wine API."}
+    return {"message": "Welcome to the wine API. Go to /login to access the swaggerUI"}
 
 
 @app.get("/login", include_in_schema=False)
 async def login_for_docs(auth: Annotated[BasicAuth, Depends(basic_auth)],
-                         user_db: Annotated[MariaDB, Depends(auth_db_conn)]):
+                         user_db: Annotated[MariaDB, Depends(DB_CONN)]):
     if not auth:
         return Response(headers={"WWW-Authenticate": "Basic"}, status_code=401)
     try:
         decoded = base64.b64decode(auth).decode("ascii")
         username, _, password = decoded.partition(":")
-        print(username, password)
-        print(user_db)
-        print(user_db.user, user_db.password, user_db)
         user = authenticate_user(username=username, password=password, user_db=user_db)
         print("user is found")
         if not user:

@@ -2,7 +2,8 @@ from typing import Optional, Any
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from sqlalchemy.engine.base import Connection#, DBAPICursor
+from sqlalchemy.engine.base import Connection
+from mysql.connector.cursor import MySQLCursor
 
 
 class MariaDB:
@@ -13,7 +14,7 @@ class MariaDB:
         self.host = host
         self.port = port
         self.connection: Optional[Connection] = None
-        self.cursor: Optional[Any] = None
+        self.cursor: Optional[MySQLCursor] = None
 
         self.connection_string = f"mysql+mysqlconnector://" \
                                  f"{self.user}:{self.password}@{self.host}:{self.port}/{self.database}"
@@ -23,7 +24,7 @@ class MariaDB:
         return self
 
     def __exit__(self, *exc_info):
-        self._close_connection(commit=True)
+        self._close_connection()
 
     def _initiate_connection(self):
         # Use SQLAlchemy to create a connection to MariaDB
@@ -31,12 +32,10 @@ class MariaDB:
         self.connection = engine.connect()
         self.cursor = self.connection.connection.cursor()
 
-    def _close_connection(self, commit: bool = False):
+    def _close_connection(self):
         if self.cursor:
             self.cursor.close()
         if self.connection:
-            if commit:
-                self.connection.commit()
             self.connection.close()
 
     def engine_connect(self) -> Engine:
@@ -51,12 +50,11 @@ class MariaDB:
 
     def execute_query(self, query: str) -> None:
         try:
-            trans = self.connection.begin()
-            self.cursor.execute(operation=query)
-            trans.commit()
+            with self.connection.begin() as trans:
+                self.cursor.execute(operation=query)
         except Exception as e:
             print(f"Error executing query: {e}")
-            self.connection.rollback()
+            raise Exception(e)
 
     def execute_query_select(self, query: str, get_fields: bool = False) -> Any:
         self.cursor.execute(operation=query)

@@ -4,17 +4,14 @@ from datetime import timedelta, datetime
 import jwt
 
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status, Response
 from fastapi.security import SecurityScopes
+from fastapi import Depends, HTTPException, status, Response
 
 from .db_utils import MariaDB
-from .dependencies import DBConnDep
 from .auth_utils import OAuth2PasswordBearerCookie
-from .constants import JWT_KEY, ALGORITHM, SCOPES, DB_CREDS
 from .models import OwnerDbModel, OwnerModel, TokenData
+from .constants import JWT_KEY, ALGORITHM, SCOPES, DB_CONN
 
-
-auth_db_conn = DBConnDep(DB_CREDS)
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2_scheme = OAuth2PasswordBearerCookie(token_url='users/token', scopes=SCOPES)
@@ -111,7 +108,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 
 
 async def get_current_user(security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_scheme)],
-                           user_db: Annotated[MariaDB, Depends(auth_db_conn)],
+                           user_db: Annotated[MariaDB, Depends(DB_CONN)],
                            response: Response) -> OwnerDbModel:
     """
     Dependency to validate a JWT token. It checks if the token is linked to a valid user and if the token has all the

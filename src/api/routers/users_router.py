@@ -3,17 +3,15 @@ from enum import Enum
 from typing import Annotated
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, Security, Form, Query, Body
 from fastapi import HTTPException, status
+from fastapi import APIRouter, Depends, Security, Form
 from fastapi.security import OAuth2PasswordRequestForm
 
 from ..db_utils import MariaDB
-from ..constants import ACCESS_TOKEN_EXPIRATION_MIN, SCOPES
+from ..constants import ACCESS_TOKEN_EXPIRATION_MIN, SCOPES, DB_CONN
 from ..authentication import (authenticate_user, create_access_token, verify_scopes, get_password_hash,
-                              auth_db_conn, get_current_active_user, get_user)
+                              get_current_active_user, get_user)
 from ..models import Token
-
-# from dwh_api.api_models import Token, User, UserUpdateModel
 
 
 SCOPES_ENUM = Enum('ScopesType', ((s, s) for s in SCOPES.keys()), type=str)
@@ -25,7 +23,7 @@ router = APIRouter(prefix="/users",
 
 @router.post(path='/token', response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-                                 user_db: Annotated[MariaDB, Depends(auth_db_conn)]):
+                                 user_db: Annotated[MariaDB, Depends(DB_CONN)]):
     """
     Login form for Oauth2. Validates credentials and verifies permissions. It then generates an access token with only 
     the specified scopes that this user has access to. These tokens are only valid for a limited time, so these should 
@@ -48,7 +46,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 
 @router.post(path='/extendedtoken', response_model=Token,
              dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
-async def get_extended_access_token(user_db: Annotated[MariaDB, Depends(auth_db_conn)],
+async def get_extended_access_token(user_db: Annotated[MariaDB, Depends(DB_CONN)],
                                     token_user: Annotated[str, Form()],
                                     scopes: Annotated[list[SCOPES_ENUM], Form()],
                                     days_valid: Annotated[int, Form(..., ge=1, le=365)]):
