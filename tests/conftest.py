@@ -1,4 +1,3 @@
-import os
 import json
 
 from typing import Any
@@ -9,7 +8,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 from fastapi_pagination import add_pagination
-
 
 from api import dependencies, db_initialisation, db_utils, constants
 
@@ -44,7 +42,7 @@ def new_user(test_app):
 
 
 @pytest.fixture()
-def token_cellar_read(test_app, new_user, token_admin):
+def token_new_user(test_app, new_user, token_admin):
     def get_token(data: dict):
         token = token_admin
         new_user(data=data, token=token)
@@ -58,18 +56,9 @@ def token_cellar_read(test_app, new_user, token_admin):
 
 
 @pytest.fixture()
-def token_cellar_all(test_app):
-    response = test_app.post(url='/users/token', data={'username': 'cellar_all',
-                                                       'password': 'cellar_all',
-                                                       'scope': 'CELLAR:READ CELLAR:WRITE'},
-                             headers={"content-type": "application/x-www-form-urlencoded"})
-    return response.json()
-
-
-@pytest.fixture()
-def token_nothing(test_app):
-    response = test_app.post(url='/users/token', data={'username': 'nothing',
-                                                       'password': 'nothing',
+def token_non_existing_user(test_app):
+    response = test_app.post(url='/users/token', data={'username': 'non_existing_user',
+                                                       'password': 'non_existing_user',
                                                        'scope': ''},
                              headers={"content-type": "application/x-www-form-urlencoded"})
     return response.json()
@@ -174,3 +163,14 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
     monkeypatch.setattr(db_initialisation, 'check_for_cellar_db', mock_check_for_cellar_db)
     monkeypatch.setattr(db_initialisation, 'check_for_admin_user', mock_check_for_admin_user)
 
+
+@pytest.fixture()
+def scopeless_user_data():
+    return {'id': 2, 'name': 'scopeless_user', 'username': 'scopeless_user', 'password': 'scopeless_user', 'scopes': '',
+            'is_admin': 0, 'enabled': 1}
+
+
+@pytest.fixture()
+def cellar_read_user_data():
+    return {'id': 3, 'name': 'cellar_read', 'username': 'cellar_read', 'password': 'cellar_read',
+            'scopes': 'CELLAR:READ', 'is_admin': 0, 'enabled': 1}

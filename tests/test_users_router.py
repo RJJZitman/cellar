@@ -9,12 +9,13 @@ from api.constants import JWT_KEY, ALGORITHM
 
 
 @pytest.mark.unit
-def test_get_token_unauthorized(test_app, token_nothing):
+def test_get_token_unauthorized(test_app, token_non_existing_user):
     response = test_app.post(url='/users/token',
-                             data={'username': 'nothing', 'password': 'nothing', 'scope': ''},
+                             data={'username': 'non_existing_user', 'password': 'non_existing_user', 'scope': ''},
                              headers={"content-type": "application/x-www-form-urlencoded"})
+
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.text == '{"detail":"Incorrect username or password"}'
+    assert response.json() == {"detail": "Incorrect username or password"}
 
 
 @pytest.mark.unit
@@ -27,28 +28,26 @@ def test_get_token(test_app, token_admin):
 
 
 @pytest.mark.unit
-def test_add_user(test_app, token_admin):
+def test_add_user(test_app, token_admin, scopeless_user_data):
     token = token_admin
-    data = {'id': 2, 'name': 'test_add_user', 'username': 'test_add_user', 'password': 'test_add_user', 'scopes': '',
-            'is_admin': 0, 'enabled': 1}
+    data = scopeless_user_data
     response = test_app.post(url='/users/add',
                              data=json.dumps(data),
                              headers={"content-type": "application/json",
                                       "Authorization": f"Bearer {token['access_token']}"})
 
     assert response.status_code == 200
-    assert response.json() == "User with username test_add_user has successfully been added to the DB"
+    assert response.json() == "User with username scopeless_user has successfully been added to the DB"
 
 
 @pytest.mark.unit
-def test_add_user_duplicate(test_app, token_admin):
+def test_add_user_duplicate(test_app, token_admin, scopeless_user_data):
     token = token_admin
-    data = {'id': 5, 'name': 'admin', 'username': 'test_add_user', 'password': 'admin', 'scopes': '', 'is_admin': 0,
-            'enabled': 1}
+    data = scopeless_user_data
     response = test_app.post(url='/users/add',
                              data=json.dumps(data),
                              headers={"content-type": "application/json",
                                       "Authorization": f"Bearer {token['access_token']}"})
 
     assert response.status_code == 400
-    assert response.json() == {"detail": "A user with username test_add_user already exists"}
+    assert response.json() == {"detail": "A user with username scopeless_user already exists"}
