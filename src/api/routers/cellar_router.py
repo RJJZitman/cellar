@@ -18,6 +18,7 @@ router = APIRouter(prefix="/cellar",
 async def get_owners(db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
     """
     Retrieve all registered wine/beer owners.
+    Required scope(s): CELLAR:READ
     """
     return db_conn.execute_query_select(query='select * from cellar.owners', get_fields=True)
 
@@ -26,6 +27,7 @@ async def get_owners(db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
 async def get_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
     """
     Retrieve all owners registered within the DB.
+    Required scope(s): CELLAR:READ
     """
     return db_conn.execute_query_select(query='select * from cellar.storages', get_fields=True)
 
@@ -35,6 +37,7 @@ async def post_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                             storage_data: StorageInModel) -> str:
     """
     Add a storage unit to the DB.
+    Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
     db_conn.execute_query(query=f"INSERT INTO cellar.storages (location, description) VALUES "
                                 f"('{storage_data.location}', '{storage_data.description}')")
@@ -47,10 +50,10 @@ async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                               storage_data: StorageInModel) -> str:
     """
     Delete a storage unit to the DB.
+    Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
     db_conn.execute_query(query=f"DELETE FROM cellar.storages "
                                 f"WHERE location = '{storage_data.location}' "
                                 f"AND description = '{storage_data.description}'")
 
     return "Storage unit has successfully been removed from the DB"
-

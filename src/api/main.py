@@ -48,6 +48,14 @@ async def root():
 @app.get("/login", include_in_schema=False)
 async def login_for_docs(auth: Annotated[BasicAuth, Depends(basic_auth)],
                          user_db: Annotated[MariaDB, Depends(DB_CONN)]):
+    """
+    Endpoint used to access the swagger UI. This endpoint is only called in the WebBrowser and for debugging
+    purposes only.
+    Required scope(s): None
+
+    :param auth: Authorisation form
+    :param user_db: Dependency yielding a live DB connection
+    """
     if not auth:
         return Response(headers={"WWW-Authenticate": "Basic"}, status_code=401)
     try:
@@ -74,5 +82,11 @@ async def login_for_docs(auth: Annotated[BasicAuth, Depends(basic_auth)],
 
 @app.get("/docs", dependencies=[Depends(get_current_active_user)], include_in_schema=False)
 async def get_documentation(request: Request):
+    """
+    Builds the documentation page of the swagger UI. This endpoint is only called by the /login endpoint when it is
+    accessed in the WebBrowser. This endpoint is meant only for debugging purposes.
+    purposes only.
+    Required scope(s): None
+    """
     root_path = request.scope.get("root_path", "").rstrip("/")
     return get_swagger_ui_html(openapi_url=f"{root_path}{OPENAPI_URL}", title="docs")

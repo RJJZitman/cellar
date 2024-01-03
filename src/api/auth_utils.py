@@ -9,6 +9,9 @@ from starlette.status import HTTP_403_FORBIDDEN
 
 
 class BasicAuth(SecurityBase):
+    """
+    Basic auth model for swagger UI access.
+    """
     def __init__(self, scheme_name: str = None, auto_error: bool = True):
         self.scheme_name = scheme_name or self.__class__.__name__
         self.auto_error = auto_error
@@ -28,6 +31,9 @@ class BasicAuth(SecurityBase):
 
 
 class OAuth2PasswordBearerCookie(OAuth2):
+    """
+    Oath2 Cookie bearer. Enables view access to the swagger UI when accessing the /login page.
+    """
     def __init__(self, token_url: str, scheme_name: str = None, scopes: dict = None, auto_error: bool = True):
         if not scopes:
             scopes = {}
@@ -35,7 +41,9 @@ class OAuth2PasswordBearerCookie(OAuth2):
         super().__init__(flows=flows, scheme_name=scheme_name, auto_error=auto_error)
 
     async def __call__(self, request: Request) -> Optional[str]:
-        # scheme: str | None
+        """
+        Places either the cookie or header scheme.
+        """
         header_authorization: str = request.headers.get("Authorization")
         cookie_authorization: str = request.cookies.get("Authorization")
 
@@ -44,10 +52,8 @@ class OAuth2PasswordBearerCookie(OAuth2):
 
         # authorization = True
         if header_scheme.lower() == "bearer":
-            # scheme = header_scheme
             return header_param
         elif cookie_scheme.lower() == "bearer":
-            # scheme = cookie_scheme
             return cookie_param
         else:
             if self.auto_error:
