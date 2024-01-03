@@ -3,7 +3,7 @@ import json
 import jwt
 import pytest
 
-from fastapi import status
+from fastapi import status, HTTPException
 
 from api.constants import JWT_KEY, ALGORITHM
 
@@ -25,6 +25,31 @@ def test_get_token(test_app, token_admin):
 
     assert payload.get('sub') == 'admin'
     assert payload.get('scopes') == ['USERS:READ', 'USERS:WRITE']
+
+
+@pytest.mark.unit
+def test_extended_token(test_app, token_admin):
+    token = token_admin
+    data = {"token_user": "admin", "days_valid": 2, "scopes": "USERS:READ"}
+    response = test_app.post(url='/users/extendedtoken',
+                             data=data,
+                             headers={"content-type": "application/x-www-form-urlencoded",
+                                      "Authorization": f"Bearer {token['access_token']}"})
+    assert response.status_code == 200
+    assert "access_token" in response.json().keys()
+    assert response.json()["token_type"] == "bearer"
+
+
+@pytest.mark.unit
+def test_extended_token_user_not_found(test_app, token_admin):
+    token = token_admin
+    data = {"token_user": "user_not_found", "days_valid": 2, "scopes": "USERS:READ"}
+
+    response = test_app.post(url='/users/extendedtoken',
+                             data=data,
+                             headers={"content-type": "application/x-www-form-urlencoded",
+                                      "Authorization": f"Bearer {token['access_token']}"})
+    assert response.status_code == 404
 
 
 @pytest.mark.unit
