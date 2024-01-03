@@ -17,7 +17,7 @@ SQLITE_DB_URL = 'sqlite://'
 
 
 @pytest.fixture()
-def test_app(env_monkeypatch):
+def test_app():
     from api.main import app
     add_pagination(app)
     client = TestClient(app)
@@ -34,31 +34,24 @@ def token_admin(test_app):
 
 
 @pytest.fixture()
-def new_user(test_app, token_admin):
-
-    def set_user_scopes(data: dict):
-        token = token_admin
+def new_user(test_app):
+    def set_user_scopes(data: dict, token: dict):
         test_app.post(url='/users/add',
                       data=json.dumps(data),
                       headers={"content-type": "application/json",
                                "Authorization": f"Bearer {token['access_token']}"})
-        print(f"user with username: {data['username']} has been added")
     return set_user_scopes
 
 
 @pytest.fixture()
-def token_cellar_read(test_app, token_admin):
+def token_cellar_read(test_app, new_user, token_admin):
     def get_token(data: dict):
         token = token_admin
-        print(token)
+        new_user(data=data, token=token)
         response = test_app.post(url='/users/token', data={'username': data['username'],
                                                            'password': data['password'],
                                                            'scope': data['scopes']},
-                                 # headers={"content-type": "application/x-www-form-urlencoded"})
-                                 headers={"content-type": "application/x-www-form-urlencoded",
-                                 # headers={"content-type": "application/json",
-                                          "Authorization": f"Bearer {token['access_token']}"})
-        print(response.json())
+                                 headers={"content-type": "application/x-www-form-urlencoded"})
         return response.json()
 
     return get_token

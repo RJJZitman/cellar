@@ -17,9 +17,8 @@ router = APIRouter(prefix="/cellar",
 @router.get("/owners/get", response_model=list[OwnerModel], dependencies=[Security(get_current_active_user)])
 async def get_owners(db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
     """
-    Retrieve all owners registered within the DB.
+    Retrieve all registered wine/beer owners.
     """
-    print("hailloooo")
     return db_conn.execute_query_select(query='select * from cellar.owners', get_fields=True)
 
 

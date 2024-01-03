@@ -1,4 +1,3 @@
-import sys
 import json
 
 import jwt
@@ -6,7 +5,6 @@ import pytest
 
 from fastapi import status
 
-sys.path.append('./src/')
 from api.constants import JWT_KEY, ALGORITHM
 
 
@@ -45,7 +43,7 @@ def test_add_user(test_app, token_admin):
 @pytest.mark.unit
 def test_add_user_duplicate(test_app, token_admin):
     token = token_admin
-    data = {'id': 5, 'name': 'admin', 'username': 'admin', 'password': 'admin', 'scopes': '', 'is_admin': 0,
+    data = {'id': 5, 'name': 'admin', 'username': 'test_add_user', 'password': 'admin', 'scopes': '', 'is_admin': 0,
             'enabled': 1}
     response = test_app.post(url='/users/add',
                              data=json.dumps(data),
@@ -53,4 +51,4 @@ def test_add_user_duplicate(test_app, token_admin):
                                       "Authorization": f"Bearer {token['access_token']}"})
 
     assert response.status_code == 400
-    assert response.json() == {"detail": "A user with username admin already exists"}
+    assert response.json() == {"detail": "A user with username test_add_user already exists"}

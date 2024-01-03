@@ -1,14 +1,10 @@
-import sys
-
 import pytest
 
-
-sys.path.append('./src/')
-from api.constants import JWT_KEY, ALGORITHM
+from fastapi import status
 
 
 @pytest.mark.unit
-def test_get_owners(test_app, new_user, token_cellar_read):
+def test_get_owners(test_app, token_cellar_read):
     data = {'id': 5,
             'name': 'cellar',
             'username': 'cellar',
@@ -16,15 +12,13 @@ def test_get_owners(test_app, new_user, token_cellar_read):
             'scopes': 'CELLAR:READ',
             'is_admin': 0,
             'enabled': 1}
-    new_user(data=data)
     token = token_cellar_read(data=data)
-    print(token)
-    response = test_app.post(url='/cellar/owners/get',
-                             headers={"content-type": "application/json",
-                                      "Authorization": f"Bearer {token['access_token']}"})
-                            # headers={"content-type": "application/x-www-form-urlencoded",
-    # assert response.status_code == status.HTTP_200_OK
-    assert response.text == '{"detail":"Incorrect username or password"}'
+    response = test_app.get(url='/cellar/owners/get',
+                            headers={"content-type": "application/x-www-form-urlencoded",
+                                     "Authorization": f"Bearer {token['access_token']}"})
+    del data['password']
+    assert response.status_code == status.HTTP_200_OK
+    assert data in response.json()
 
 # @pytest.mark.unit
 # def test_
