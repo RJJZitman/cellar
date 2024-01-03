@@ -66,7 +66,6 @@ def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data):
     storages_pre = test_app.get(url='/cellar/storages/get',
                                 headers={"content-type": "application/json",
                                          "Authorization": f"Bearer {token['access_token']}"})
-    print("Database state before deletion:", storages_pre.json())
 
     # delete the storage unit and verify that it is gone from the DB
     response = test_app.delete(url='/cellar/storages/delete',
@@ -78,8 +77,7 @@ def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data):
                                  headers={"content-type": "application/json",
                                          "Authorization": f"Bearer {token['access_token']}"})
     storage_unit_data["id"] = None
-    print("Response status code:", response.status_code)
-    print("Response content:", response.json())
+
     assert storages_post.status_code == status.HTTP_200_OK
     assert storage_unit_data not in storages_post.json()
     assert storage_unit_data in storages_pre.json()
