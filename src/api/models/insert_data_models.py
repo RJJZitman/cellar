@@ -7,4 +7,4 @@ class StorageInModel(BaseModel):
 
 
 class StorageOutModel(StorageInModel):
-    id: int
+    id: int | None = None

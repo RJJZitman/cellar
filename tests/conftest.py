@@ -174,3 +174,9 @@ def scopeless_user_data():
 def cellar_read_user_data():
     return {'id': 3, 'name': 'cellar_read', 'username': 'cellar_read', 'password': 'cellar_read',
             'scopes': 'CELLAR:READ', 'is_admin': 0, 'enabled': 1}
+
+
+@pytest.fixture()
+def cellar_all_user_data():
+    return {'id': 4, 'name': 'cellar_all', 'username': 'cellar_all', 'password': 'cellar_all',
+            'scopes': 'CELLAR:READ CELLAR:WRITE', 'is_admin': 0, 'enabled': 1}
