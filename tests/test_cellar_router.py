@@ -78,6 +78,6 @@ def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data):
                                          "Authorization": f"Bearer {token['access_token']}"})
     storage_unit_data["id"] = None
 
-    assert storages_post.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_200_OK
     assert storage_unit_data not in storages_post.json()
     assert storage_unit_data in storages_pre.json()
