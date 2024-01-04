@@ -163,6 +163,8 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
     monkeypatch.setattr(db_initialisation, 'check_for_cellar_db', mock_check_for_cellar_db)
     monkeypatch.setattr(db_initialisation, 'check_for_admin_user', mock_check_for_admin_user)
 
+    return MockMariaDB(**constants.DB_CREDS.dict())
+
 
 @pytest.fixture()
 def scopeless_user_data():
@@ -180,3 +182,9 @@ def cellar_read_user_data():
 def cellar_all_user_data():
     return {'id': 4, 'name': 'cellar_all', 'username': 'cellar_all', 'password': 'cellar_all',
             'scopes': 'CELLAR:READ CELLAR:WRITE', 'is_admin': 0, 'enabled': 1}
+
+
+@pytest.fixture()
+def inactive_user_data():
+    return {'id': 5, 'name': 'inactive', 'username': 'inactive', 'password': 'inactive',
+            'scopes': '', 'is_admin': 0, 'enabled': 0}

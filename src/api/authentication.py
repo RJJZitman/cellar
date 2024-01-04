@@ -103,7 +103,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({'exp': expire})
-    encoded_jwt = jwt.encode(to_encode, JWT_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(payload=to_encode, key=JWT_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -128,7 +128,7 @@ async def get_current_user(security_scopes: SecurityScopes, token: Annotated[str
                                           detail='Could not validate credentials',
                                           headers={'WWW-Authenticate': authenticate_value})
     try:
-        payload = jwt.decode(token, JWT_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(jwt=token, key=JWT_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
         if username is None:
             raise credentials_exception
