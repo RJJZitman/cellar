@@ -1,0 +1,13 @@
+--CREATE TABLE IF NOT EXISTS cellar.cellar(
+--     id INT NOT NULL AUTO_INCREMENT,
+--     wine_id INT,
+--     storage_unit INT,
+--     owner_id INT,
+--     bottle_size_cl INT,
+--     quantity int,
+--     drink_from DATE,
+--     drink_before DATE,
+--     PRIMARY KEY (id)
+--);
+--
+--view maken voor dit ding --> daarna een endpoint erop knallen

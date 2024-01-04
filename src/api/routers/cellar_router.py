@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Security, Query, Body
+from fastapi import APIRouter, Depends, Security, Query
 
 from ..db_utils import MariaDB
 from ..constants import DB_CONN

@@ -1,13 +1,3 @@
-CREATE TABLE IF NOT EXISTS cellar.cellar(
-     id INT NOT NULL AUTO_INCREMENT,
-     wine_id INT,
-     storage_unit INT,
-     owner_id INT,
-     bottle_size_cl INT,
-     quantity int,
-     PRIMARY KEY (id)
-);
-
 CREATE TABLE IF NOT EXISTS cellar.owners(
      id INT NOT NULL AUTO_INCREMENT,
      name VARCHAR(200),

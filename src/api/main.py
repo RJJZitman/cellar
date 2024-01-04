@@ -40,7 +40,7 @@ app.include_router(users_router.router)
 app.include_router(cellar_router.router)
 
 
-@app.get('/')
+@app.get('/', include_in_schema=False)
 async def root():
     return {"message": "Welcome to the wine API. Go to /login to access the swaggerUI"}
 

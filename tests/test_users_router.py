@@ -3,7 +3,7 @@ import json
 import jwt
 import pytest
 
-from fastapi import status, HTTPException
+from fastapi import status
 
 from api.constants import JWT_KEY, ALGORITHM
 
