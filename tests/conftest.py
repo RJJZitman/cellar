@@ -154,7 +154,6 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
             return result
 
         def execute_query(self, query: str, params: dict[str, Any] | list | tuple | None = None):
-            print(query)
             if query == "use cellar" or query == "drop schema cellar":
                 return
             if params is None:
@@ -184,8 +183,6 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
         def _close_connection(self):
             pass
 
-
-    monkeypatch.setattr(db_utils, 'MariaDB', MockMariaDB)
     monkeypatch.setattr(dependencies, 'MariaDB', MockMariaDB)
     monkeypatch.setattr(db_initialisation, 'MariaDB', MockMariaDB)
 

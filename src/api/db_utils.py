@@ -91,7 +91,7 @@ class MariaDB:
                 self.cursor.execute(operation=query)
         except Exception as e:
             print(f"Error executing query: {e}")
-            raise Exception(e)
+            raise Exception(str(e))
 
     def execute_query_select(self, query: str, get_fields: bool = False) -> Any:
         """
