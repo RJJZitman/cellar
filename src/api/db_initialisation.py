@@ -8,15 +8,19 @@ from .models import DbConnModel
 from .authentication import get_password_hash
 
 
-def database_service(restarted: bool = True) -> None:
+def database_service(restarted: bool = True) -> bool:
     """
     If requested, restarts the DB service and waits a fixed amount of time to allow for the DB to fully set-up.
 
     :param restarted: Denotes whether the DB service should be restarted
+    :return: whether the db service was restarted
     """
     if restarted:
         os.system('brew services restart mariadb')
-        time.sleep(15)
+        time.sleep(secs=15)
+        return True
+    else:
+        return False
 
 
 def setup_new_database(db_conn: MariaDB) -> None:
@@ -53,14 +57,14 @@ def check_for_cellar_db(db_conn: MariaDB) -> bool:
 
     :param db_conn: The MariaDB JDBC connection
     """
-    existing_dbs = db_conn.execute_query_select("show databases")
+    existing_dbs = db_conn.execute_query_select(query="show databases")
     if sum([1 for existing_db in existing_dbs if existing_db[0] == "cellar"]):
         print("cellar DB has been found")
-        db_conn.execute_query("use cellar")
-        existing_tables = db_conn.execute_query_select("show tables")
+        db_conn.execute_query(query="use cellar")
+        existing_tables = db_conn.execute_query_select(query="show tables")
         if sum([1 for _ in existing_tables]) < 5:
             print("cellar schema is incomplete and therefore dropped")
-            db_conn.execute_query("drop schema cellar")
+            db_conn.execute_query(query="drop schema cellar")
             return False
         return True
     else:

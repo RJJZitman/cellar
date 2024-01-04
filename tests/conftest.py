@@ -15,7 +15,7 @@ SQLITE_DB_URL = 'sqlite://'
 
 
 @pytest.fixture()
-def test_app():
+def test_app(database_service_monkeypatch):
     from api.main import app
     add_pagination(app)
     client = TestClient(app)
@@ -27,6 +27,15 @@ def token_admin(test_app):
     response = test_app.post(url='/users/token', data={'username': 'admin',
                                                        'password': 'admin',
                                                        'scope': 'USERS:READ USERS:WRITE'},
+                             headers={"content-type": "application/x-www-form-urlencoded"})
+    return response.json()
+
+
+@pytest.fixture()
+def token_non_existing_user(test_app):
+    response = test_app.post(url='/users/token', data={'username': 'non_existing_user',
+                                                       'password': 'non_existing_user',
+                                                       'scope': ''},
                              headers={"content-type": "application/x-www-form-urlencoded"})
     return response.json()
 
@@ -55,15 +64,6 @@ def token_new_user(test_app, new_user, token_admin):
     return get_token
 
 
-@pytest.fixture()
-def token_non_existing_user(test_app):
-    response = test_app.post(url='/users/token', data={'username': 'non_existing_user',
-                                                       'password': 'non_existing_user',
-                                                       'scope': ''},
-                             headers={"content-type": "application/x-www-form-urlencoded"})
-    return response.json()
-
-
 @pytest.fixture(scope='session', autouse=True)
 def in_memory_db_conn():
     engine = create_engine(SQLITE_DB_URL, connect_args={'check_same_thread': False}, poolclass=StaticPool)
@@ -76,11 +76,29 @@ def env_monkeypatch(monkeypatch):
     monkeypatch.setattr(db_initialisation, 'SRC', '/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/tests/test_')
 
 
+@pytest.fixture
+def database_service_monkeypatch(monkeypatch):
+    def mock_database_service(*args, **kwargs):
+        pass
+
+    def mock_check_for_admin_user(*args, **kwargs):
+        return False
+
+    def mock_check_for_cellar_db(*args, **kwargs):
+        return False
+
+    monkeypatch.setattr(db_initialisation, 'database_service', mock_database_service)
+    monkeypatch.setattr(db_initialisation, 'check_for_cellar_db', mock_check_for_cellar_db)
+    monkeypatch.setattr(db_initialisation, 'check_for_admin_user', mock_check_for_admin_user)
+
+
 @pytest.fixture(autouse=True)
 def db_monkeypatch(in_memory_db_conn, monkeypatch):
     class MockMariaDB:
         def __init__(self, *args, **kwargs):
             self.conn = in_memory_db_conn
+            self._cellar_exists = False
+            self._tables_exist = False
             for k, v in kwargs.items():
                 setattr(self, k, v)
 
@@ -95,7 +113,8 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                      .replace(')s', '')
                      .replace('%(', ':')
                      .replace('cellar.', '')
-                     .replace('NOT NULL', ''))
+                     .replace('NOT NULL', '')
+                     .replace('TRUNCATE TABLE', 'DELETE FROM'))
 
             # make sure to insert a unique id when initializing the db
             if 'INSERT INTO owners (name' in query:
@@ -108,8 +127,22 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                          .replace('VALUES (', f'VALUES ({max_id}, '))
             return query
 
+        def _show_query_patch(self, query: str):
+            if "tables" in query:
+                if self._tables_exist:
+                    return [1, 2, 3, 4, 5]
+                else:
+                    return []
+            elif "databases" in query:
+                if self._cellar_exists:
+                    return [("cellar", )]
+                else:
+                    return [("", )]
+
         def execute_query_select(self, query: str, params: dict[str, Any] | list | tuple | None = None,
                                  get_fields: bool = False):
+            if query in ("show databases", "show tables"):
+                return self._show_query_patch(query=query)
             if params is None:
                 params = {}
             cursor = self.conn.execute(self._alter_query(query), params)
@@ -121,8 +154,12 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
             return result
 
         def execute_query(self, query: str, params: dict[str, Any] | list | tuple | None = None):
+            print(query)
+            if query == "use cellar" or query == "drop schema cellar":
+                return
             if params is None:
                 params = {}
+
             if 'SCHEMA' in query:
                 return
             elif ' database if ' in query.lower():
@@ -147,21 +184,10 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
         def _close_connection(self):
             pass
 
-    def mock_database_service(*args, **kwargs):
-        pass
-
-    def mock_check_for_admin_user(*args, **kwargs):
-        return False
-
-    def mock_check_for_cellar_db(*args, **kwargs):
-        return False
 
     monkeypatch.setattr(db_utils, 'MariaDB', MockMariaDB)
     monkeypatch.setattr(dependencies, 'MariaDB', MockMariaDB)
     monkeypatch.setattr(db_initialisation, 'MariaDB', MockMariaDB)
-    monkeypatch.setattr(db_initialisation, 'database_service', mock_database_service)
-    monkeypatch.setattr(db_initialisation, 'check_for_cellar_db', mock_check_for_cellar_db)
-    monkeypatch.setattr(db_initialisation, 'check_for_admin_user', mock_check_for_admin_user)
 
     return MockMariaDB(**constants.DB_CREDS.dict())
 
