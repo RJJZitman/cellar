@@ -158,4 +158,4 @@ async def get_current_active_user(current_user: Annotated[OwnerModel, Depends(ge
     """
     if not current_user.enabled:
         raise HTTPException(status_code=400, detail='Inactive user')
-    return current_user
+    return OwnerModel(**current_user.dict())
