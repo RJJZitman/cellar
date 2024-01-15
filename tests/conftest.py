@@ -111,6 +111,8 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
         def _alter_query(self, query: str) -> str:
             query = (query.replace('AUTO_INCREMENT', '')
                      .replace(')s', '')
+                     .replace('`', '')
+                     .replace('UNSIGNED', '')
                      .replace('%(', ':')
                      .replace('cellar.', '')
                      .replace('NOT NULL', '')
