@@ -8,7 +8,6 @@ OPENAPI_URL = f"/drink_your_wine"
 SRC = '/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/'
 SQL = f'{SRC}sql/'
 
-
 # Authorization
 with open(f'{SRC}env.yml', 'r') as file:
     env = yaml.safe_load(file)

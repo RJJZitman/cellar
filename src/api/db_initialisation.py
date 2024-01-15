@@ -17,7 +17,7 @@ def database_service(restarted: bool = True) -> bool:
     """
     if restarted:
         os.system('brew services restart mariadb')
-        time.sleep(secs=15)
+        time.sleep(15)
         return True
     else:
         return False
