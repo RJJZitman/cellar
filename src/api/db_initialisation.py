@@ -46,8 +46,11 @@ def make_db_admin_user(db_conn: MariaDB) -> None:
     print(db_conn.execute_query_select(query="select * from cellar.owners"))
     db_conn.execute_query(query=f"INSERT INTO cellar.owners (name, username, password, scopes, is_admin, enabled) "
                                 f"VALUES "
-                                f"('{env['DB_USER_NAME']}', '{env['DB_USER']}', "
-                                f"'{get_password_hash(password=env['DB_PW'])}', '', 1, 1)")
+                                f"(:name, :username, "
+                                f":password, '', 1, 1)",
+                          params={"name": env['DB_USER_NAME'],
+                                  "username": env['DB_USER'],
+                                  "password": get_password_hash(password=env['DB_PW'])})
     print(db_conn.execute_query_select(query=f"select * from cellar.owners where username='{env['DB_USER_NAME']}'"))
 
 

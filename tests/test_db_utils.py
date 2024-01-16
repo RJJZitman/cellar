@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from api import db_utils
@@ -26,7 +28,7 @@ def sqlalchemy_monkeypatch(monkeypatch):
                                         self.cursor_init = True
                                         self.column_names = ["a", "b"]
 
-                                    def execute(self, operation: str):
+                                    def execute(self, operation: str, params: Any):
                                         if operation == "exception":
                                             raise Exception("MOCK EXCEPTION CURSOR EXECUTE")
 
@@ -102,6 +104,10 @@ class TestMariaDB:
     def test_execute_queries(self):
         with db_utils.MariaDB(**self.basic_init) as db:
             db.execute_queries(queries="hello;bye;")
+
+    def test_execute_queries_params(self):
+        with db_utils.MariaDB(**self.basic_init) as db:
+            db.execute_queries(queries="hello;bye;", params=[{"a": 1}, {"b": 2}])
 
     def test_execute_query_select_no_fields(self):
         with db_utils.MariaDB(**self.basic_init) as db:

@@ -70,53 +70,62 @@ class MariaDB:
         engine = create_engine(self.connection_string)
         return engine
 
-    def execute_queries(self, queries: str) -> None:
+    def execute_queries(self, queries: str, params: list[Any | None] | None = None) -> None:
         """
         Executes multiple queries separated by a ";".
 
         :param queries: The queries formatted as string
+        :param params: Optional extra query params
         """
-        for query in queries.split(';')[:-1]:
-            print(query)
-            self.execute_query(query=f"{query};")
+        if params:
+            for query, param in zip(queries.split(';')[:-1], params):
+                self.execute_query(query=f"{query};", params=param)
+        else:
+            for query in queries.split(';')[:-1]:
+                self.execute_query(query=f"{query};")
 
-    def execute_query(self, query: str) -> None:
+    def execute_query(self, query: str, params: dict[str, Any] | list | tuple | None = None) -> None:
         """
         Executes a single query. Uses a transaction to commit the executed query automatically.
 
         :param query: The query that is executed
+        :param params: Optional extra query params
         """
         try:
             with self.connection.begin() as trans:
-                self.cursor.execute(operation=query)
+                self.cursor.execute(operation=query, params=params)
         except Exception as e:
             print(f"Error executing query: {e}")
             raise Exception(str(e))
 
-    def execute_query_select(self, query: str, get_fields: bool = False) -> Any:
+    def execute_query_select(self, query: str, params: dict[str, Any] | list | tuple | None = None,
+                             get_fields: bool = False) -> Any:
         """
         Executes a select query.
 
         :param query: The executed select query
+        :param params: Optional extra query params
         :param get_fields: Denotes whether the field names should be retrieved
         :return: The data requested by the query
         """
-        self.cursor.execute(operation=query)
+        self.cursor.execute(operation=query, params=params)
         result = self.cursor.fetchall()
         if get_fields:
             cols = self.cursor.column_names
             result = [{col: value for col, value in zip(cols, row)} for row in result]
         return result
 
-    def execute_sql_file(self, file_path: str, multi: bool = False) -> None:
+    def execute_sql_file(self, file_path: str, params: dict[str, Any] | list | tuple | None = None,
+                         multi: bool = False) -> None:
         """
         Reads a SQL string from a file and executes the query. Note that this method only support non-select queries.
 
         :param file_path: path to where the query-containing file lives
+        :param params: Optional extra query params
         :param multi: Denotes if the file contains multiple queries or a single one
         """
         with open(file=file_path, mode='r') as sql_file:
             if multi:
-                self.execute_queries(queries=sql_file.read())
+                self.execute_queries(queries=sql_file.read(), params=params)
             else:
-                self.execute_query(query=sql_file.read())
+                self.execute_query(query=sql_file.read(), params=params)

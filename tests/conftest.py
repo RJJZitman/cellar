@@ -167,17 +167,17 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                 return False
             self.conn.execute(self._alter_query(query), params)
 
-        def execute_sql_file(self, file_path: str, multi: bool = False) -> None:
+        def execute_sql_file(self, file_path: str, params: Any | None = None, multi: bool = False) -> None:
             with open(file=file_path, mode='r') as sql_file:
                 if multi:
-                    self.execute_queries(queries=sql_file.read())
+                    self.execute_queries(queries=sql_file.read(), params=params)
                 else:
-                    self.execute_query(query=sql_file.read())
+                    self.execute_query(query=sql_file.read(), params=params)
 
-        def execute_queries(self, queries: str) -> None:
+        def execute_queries(self, queries: str, params: Any | None) -> None:
             for query in queries.split(';')[:-1]:
                 print(query)
-                self.execute_query(query=f"{query};")
+                self.execute_query(query=f"{query};", params=params)
 
         def _initiate_connection(self):
             pass
