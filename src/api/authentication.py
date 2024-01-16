@@ -63,7 +63,7 @@ def get_user(username: str, user_db: MariaDB) -> OwnerDbModel | None:
     :return: User model or None
     """
     try:
-        user = user_db.execute_query_select(query=f"select * from cellar.owners where username=:username",
+        user = user_db.execute_query_select(query="SELECT * FROM cellar.owners WHERE username=%(username)s",
                                             params={"username": username},
                                             get_fields=True)
         return OwnerDbModel(**user[0])

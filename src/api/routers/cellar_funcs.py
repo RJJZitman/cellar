@@ -1,5 +1,3 @@
-import json
-
 from fastapi import HTTPException, status
 
 from ..db_utils import MariaDB
@@ -11,23 +9,23 @@ def unpack_geo_info(geographic_info: GeographicInfoModel) -> str:
 
 
 async def get_storage_id(db_conn: MariaDB, current_user: OwnerModel, location: str, description: str) -> int:
-    storage_id = db_conn.execute_query_select(query=f"SELECT id FROM cellar.storages "
-                                                    f"WHERE location = :location "
-                                                    f"AND description = :description "
-                                                    f"AND owner_id = :owner_id",
+    storage_id = db_conn.execute_query_select(query="SELECT id FROM cellar.storages "
+                                                    "WHERE location = %(location)s "
+                                                    "  AND description = %(description)s "
+                                                    "  AND owner_id = %(owner_id)s",
                                               params={"location": location, "description": description,
                                                       "owner_id": current_user.id})
     try:
         return storage_id[0]
     except IndexError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Storage unit is not found.")
+                            detail="Storage unit is not found.")
 
 
 async def verify_storage_exists(db_conn: MariaDB, storage_id: int) -> bool:
-    info = db_conn.execute_query_select(query=f"SELECT location, description "
-                                              f"FROM cellar.storages "
-                                              f"WHERE id = :storage_id",
+    info = db_conn.execute_query_select(query="SELECT location, description "
+                                              "FROM cellar.storages "
+                                              "WHERE id = %(storage_id)s",
                                         params={"storage_id": storage_id},
                                         get_fields=True)
     if len(info):
@@ -38,7 +36,7 @@ async def verify_storage_exists(db_conn: MariaDB, storage_id: int) -> bool:
 
 async def verify_empty_storage_unit(db_conn: MariaDB, storage_id: int) -> bool:
     storage = db_conn.execute_query_select(query="SELECT * FROM cellar.cellar "
-                                                 "WHERE storage_unit = :storage_id",
+                                                 "WHERE storage_unit = %(storage_id)s",
                                            params={"storage_id": str(storage_id)})
     if storage:
         # Raise 400 error for non-empty storage unit.
@@ -50,9 +48,9 @@ async def verify_empty_storage_unit(db_conn: MariaDB, storage_id: int) -> bool:
 
 
 async def verify_wine_in_db(db_conn: MariaDB, name: str, vintage: int) -> bool:
-    wine = db_conn.execute_query_select(query=f"SELECT * FROM cellar.wines "
-                                              f"WHERE name = :name "
-                                              f"AND vintage = :vintage",
+    wine = db_conn.execute_query_select(query="SELECT * FROM cellar.wines "
+                                              "WHERE name = %(name)s "
+                                              "AND vintage = %(vintage)s",
                                         params={"name": name, "vintage": vintage})
     if wine:
         return True
@@ -61,11 +59,11 @@ async def verify_wine_in_db(db_conn: MariaDB, name: str, vintage: int) -> bool:
 
 
 async def add_wine_to_db(db_conn: MariaDB, wine_info: WinesModel):
-    db_conn.execute_query(query=f"INSERT INTO cellar.wines (name, vintage, grapes, type, drink_from, drink_before, "
-                                f"                          alcohol_vol_perc, geographic_info, quality_signature) "
-                                f"VALUES "
-                                f"(:name, :vintage, :grapes, :type, :drink_from, :drink_before, :alcohol_vol_perc, "
-                                f" :geographic_info, :quality_signature)",
+    db_conn.execute_query(query="INSERT INTO cellar.wines (name, vintage, grapes, type, drink_from, drink_before, "
+                                "                          alcohol_vol_perc, geographic_info, quality_signature) "
+                                "VALUES "
+                                "(%(name)s, %(vintage)s, %(grapes)s, %(type)s, %(drink_from)s, %(drink_before)s, "
+                                "%(alcohol_vol_perc)s, %(geographic_info)s, %(quality_signature)s)",
                           params={"name": wine_info.name, "vintage": wine_info.vintage, "grapes": wine_info.grapes,
                                   "type": wine_info.type, "drink_from": wine_info.drink_from,
                                   "drink_before": wine_info.drink_before,
@@ -75,9 +73,9 @@ async def add_wine_to_db(db_conn: MariaDB, wine_info: WinesModel):
 
 
 async def get_bottle_id(db_conn: MariaDB, name: str, vintage: int) -> bool:
-    wine = db_conn.execute_query_select(query=f"SELECT id FROM cellar.wines "
-                                              f"WHERE name = :name "
-                                              f"AND vintage = :vintage",
+    wine = db_conn.execute_query_select(query="SELECT id FROM cellar.wines "
+                                              "WHERE name = %(name)s "
+                                              "AND vintage = %(vintage)s",
                                         params={"name": name, "vintage": vintage})
     try:
         return wine[0][0]
@@ -89,9 +87,9 @@ async def get_bottle_id(db_conn: MariaDB, name: str, vintage: int) -> bool:
 async def verify_bottle_exists_in_storage_unit(db_conn: MariaDB, wine_id: int, storage_unit: int, bottle_size: float
                                                ) -> bool:
     in_storage_unit = db_conn.execute_query_select(query="SELECT * FROM cellar.cellar "
-                                                         "WHERE id = :wine_id "
-                                                         "   AND storage_unit = :storage_unit "
-                                                         "   AND bottle_size_cl = :bottle_size_cl",
+                                                         "WHERE id = %(wine_id)s "
+                                                         "   AND storage_unit = %(storage_unit)s "
+                                                         "   AND bottle_size_cl = %(bottle_size_cl)s",
                                                    params={"wine_id": wine_id, "storage_unit": storage_unit,
                                                            "bottle_size_cl": bottle_size})
     if len(in_storage_unit):
@@ -106,11 +104,11 @@ async def add_bottle_to_cellar(db_conn: MariaDB, wine_id: int, owner_id: int, wi
                                                   storage_unit=wine_data.storage_unit,
                                                   bottle_size=wine_data.bottle_size_cl):
         # Update the quantity by adding the new value
-        db_conn.execute_query(query=f"UPDATE cellar.cellar "
-                                    f"SET quantity = quantity + :quantity "
-                                    f"WHERE wine_id = :wine_id "
-                                    f"  AND storage_unit = :wine_data.storage_unit "
-                                    f"  AND bottle_size_cl = :wine_data.bottle_size_cl",
+        db_conn.execute_query(query="UPDATE cellar.cellar "
+                                    "SET quantity = quantity + %(quantity)s "
+                                    "WHERE wine_id = %(wine_id)s "
+                                    "  AND storage_unit = %(storage_unit)s "
+                                    "  AND bottle_size_cl = %(bottle_size_cl)s",
                               params={"quantity": str(wine_data.quantity), "wine_id": str(wine_id),
                                       "storage_unit": str(wine_data.storage_unit),
                                       "bottle_size_cl": str(wine_data.bottle_size_cl)})
@@ -118,8 +116,8 @@ async def add_bottle_to_cellar(db_conn: MariaDB, wine_id: int, owner_id: int, wi
         # Insert the data as a new entry to the DB
         db_conn.execute_query(query="INSERT INTO cellar.cellar (wine_id, storage_unit, owner_id, bottle_size_cl, "
                                     "                           quantity, drink_from, drink_before) "
-                                    "VALUES (:wine_id, :storage_unit, :owner_id, :bottle_size_cl, :quantity, "
-                                    "        :drink_from, :drink_before)",
+                                    "VALUES (%(wine_id)s, %(storage_unit)s, %(owner_id)s, %(bottle_size_cl)s, "
+                                    "        %(quantity)s, %(drink_from)s, %(drink_before)s)",
                               params={"wine_id": wine_id, "storage_unit": wine_data.storage_unit, "owner_id": owner_id,
                                       "bottle_size_cl": wine_data.bottle_size_cl, "quantity": wine_data.quantity,
                                       "drink_from": wine_data.wine_info.drink_from,

@@ -24,7 +24,7 @@ async def get_owners(db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
     Retrieve all registered wine/beer owners.
     Required scope(s): CELLAR:READ
     """
-    return db_conn.execute_query_select(query='SELECT * FROM cellar.owners', get_fields=True)
+    return db_conn.execute_query_select(query="SELECT * FROM cellar.owners", get_fields=True)
 
 
 @router.get("/storages/get", response_model=list[StorageOutModel], dependencies=[Security(get_current_active_user)])
@@ -34,7 +34,7 @@ async def get_storage_units(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     Retrieve all owners registered within the DB.
     Required scope(s): CELLAR:READ
     """
-    return db_conn.execute_query_select(query="SELECT * FROM cellar.storages WHERE owner_id = :owner_id",
+    return db_conn.execute_query_select(query="SELECT * FROM cellar.storages WHERE owner_id = %(owner_id)s",
                                         params={"owner_id": current_user.id},
                                         get_fields=True)
 
@@ -48,7 +48,7 @@ async def post_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
     db_conn.execute_query(query="INSERT INTO cellar.storages (owner_id, location, description) "
-                                "VALUES (:owner_id, :location, :description)",
+                                "VALUES (%(owner_id)s, %(location)s, %(description)s)",
                           params={"owner_id": current_user.id, "location": storage_data.location,
                                   "description": storage_data.description})
 
@@ -73,10 +73,10 @@ async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     # Remove the storage unit from DB if it is empty.
     # Note that `verify_empty_storage_unit` raises and error if the storage unit is not empty
     if await verify_empty_storage_unit(db_conn=db_conn, storage_id=storage_id):
-        db_conn.execute_query(query=f"DELETE FROM cellar.storages "
-                                    f"WHERE location = :location "
-                                    f"  AND description = :description "
-                                    f"  AND owner_id = :owner_id",
+        db_conn.execute_query(query="DELETE FROM cellar.storages "
+                                    "WHERE location = %(location)s "
+                                    "  AND description = %(description)s "
+                                    "  AND owner_id = %(owner_id)s",
                               params={"location": location, "description": description, "owner_id": current_user.id})
 
     return "Storage unit has successfully been removed from the DB"
@@ -93,7 +93,7 @@ async def add_wine_to_cellar(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     # Check if storage unit is valid
     if not await verify_storage_exists(db_conn=db_conn, storage_id=wine_data.storage_unit):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Storage unit is not found.")
+                            detail="Storage unit is not found.")
 
     # Inspect if the wine is already in the wines table
     if not await verify_wine_in_db(db_conn=db_conn, name=wine_data.wine_info.name, vintage=wine_data.wine_info.vintage):
