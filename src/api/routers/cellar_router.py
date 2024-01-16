@@ -3,7 +3,8 @@ from typing import Annotated
 from fastapi import HTTPException, status
 from fastapi import APIRouter, Depends, Security, Query
 
-from .cellar_funcs import get_storage_id, verify_storage_exists, verify_empty_storage_unit, verify_wine_in_db
+from .cellar_funcs import (get_storage_id, verify_storage_exists, verify_empty_storage_unit, verify_wine_in_db,
+                           add_wine_to_db, get_bottle_id, add_bottle_to_cellar)
 
 from ..db_utils import MariaDB
 from ..constants import DB_CONN
@@ -93,11 +94,13 @@ async def add_wine_to_cellar(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
     # Inspect if the wine is already in the wines table
     if not await verify_wine_in_db(db_conn=db_conn, name=wine_data.wine_info.name, vintage=wine_data.wine_info.vintage):
-        pass
         # If not, add data to the wines table
+        await add_wine_to_db(db_conn=db_conn, wine_info=wine_data.wine_info)
 
     # Retrieve wine ID from the wines table
+    wine_id = await get_bottle_id(db_conn=db_conn, name=wine_data.wine_info.name, vintage=wine_data.wine_info.vintage)
 
     # Insert all info into the cellar table
+    await add_bottle_to_cellar(db_conn=db_conn, wine_id=wine_id, owner_id=current_user.id, wine_data=wine_data)
 
-    return current_user, wine_data
+    return "Bottle has successfully been added to the DB"

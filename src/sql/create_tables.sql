@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS `cellar`.`wines`(
      `type` VARCHAR(20),
      `drink_from` DATE,
      `drink_before` DATE,
-     `alcohol_col_perc` DECIMAL(3, 1) UNSIGNED,
+     `alcohol_vol_perc` DECIMAL(3, 1) UNSIGNED,
      `geographic_info` TEXT,
      `quality_signature` VARCHAR(200),
      unique(`name`, `vintage`),

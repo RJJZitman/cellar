@@ -37,7 +37,7 @@ class WinesModel(BaseModel):
                                       default_factory=lambda x: datetime.datetime.strptime(
                                           str(x.vintage).rjust(5, '0'), '%Y').date())
     drink_before: datetime.date = Field(description="The last year in which you would suggest drinking the wine.")
-    alcohol_col_perc: float = Field(gt=0, lt=100, default=13.5)
+    alcohol_vol_perc: float = Field(gt=0, lt=100, default=13.5)
     geographic_info: GeographicInfoModel = Field(description="Any information on the geographic origins of the bottle.")
     quality_signature: str | None = Field(max_length=200,
                                           description=("The wine appellation. Can be left empty for "
