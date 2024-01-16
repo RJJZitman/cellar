@@ -78,12 +78,15 @@ async def add_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
     Required scope(s): USERS:READ, USERS:WRITE
     """
     # validate if user exists based on the unique username
-    user = user_db.execute_query_select(f"SELECT * FROM cellar.owners WHERE username = '{owner_data.username}'")
+    user = user_db.execute_query_select(query="SELECT * FROM cellar.owners WHERE username = :username",
+                                        params={"username": owner_data.username})
     if user:
         raise HTTPException(status_code=400, detail=f"A user with username {owner_data.username} already exists")
     user_db.execute_query(query=f"INSERT INTO cellar.owners (id, name, username, password, scopes, is_admin, enabled) "
                                 f"VALUES "
-                                f"('{owner_data.id}','{owner_data.name}', '{owner_data.username}', "
-                                f"'{get_password_hash(password=owner_data.password)}', '{owner_data.scopes}', "
-                                f"'{owner_data.is_admin}', '{owner_data.enabled}')")
+                                f"(:id,:name, :username, :password, :scopes, :is_admin, :enabled)",
+                          params={"id": owner_data.id, "name": owner_data.name, "username": owner_data.username,
+                                  "password": get_password_hash(password=owner_data.password),
+                                  "scopes": owner_data.scopes, "is_admin": owner_data.is_admin,
+                                  "enabled": owner_data.enabled})
     return f"User with username {owner_data.username} has successfully been added to the DB"

@@ -24,7 +24,7 @@ async def get_owners(db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
     Retrieve all registered wine/beer owners.
     Required scope(s): CELLAR:READ
     """
-    return db_conn.execute_query_select(query='select * from cellar.owners', get_fields=True)
+    return db_conn.execute_query_select(query='SELECT * FROM cellar.owners', get_fields=True)
 
 
 @router.get("/storages/get", response_model=list[StorageOutModel], dependencies=[Security(get_current_active_user)])
@@ -34,8 +34,8 @@ async def get_storage_units(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     Retrieve all owners registered within the DB.
     Required scope(s): CELLAR:READ
     """
-    return db_conn.execute_query_select(query=(f"SELECT * FROM cellar.storages "
-                                               f"WHERE owner_id = '{current_user.id}'"),
+    return db_conn.execute_query_select(query="SELECT * FROM cellar.storages WHERE owner_id = :owner_id",
+                                        params={"owner_id": current_user.id},
                                         get_fields=True)
 
 
@@ -47,8 +47,10 @@ async def post_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     Add a storage unit to the DB.
     Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
-    db_conn.execute_query(query=f"INSERT INTO cellar.storages (owner_id, location, description) VALUES "
-                                f"('{current_user.id}', '{storage_data.location}', '{storage_data.description}')")
+    db_conn.execute_query(query="INSERT INTO cellar.storages (owner_id, location, description) "
+                                "VALUES (:owner_id, :location, :description)",
+                          params={"owner_id": current_user.id, "location": storage_data.location,
+                                  "description": storage_data.description})
 
     return "Storage unit has successfully been added to the DB"
 
@@ -72,9 +74,10 @@ async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     # Note that `verify_empty_storage_unit` raises and error if the storage unit is not empty
     if await verify_empty_storage_unit(db_conn=db_conn, storage_id=storage_id):
         db_conn.execute_query(query=f"DELETE FROM cellar.storages "
-                                    f"WHERE location = '{location}' "
-                                    f"  AND description = '{description}' "
-                                    f"  AND owner_id = '{current_user.id}'")
+                                    f"WHERE location = :location "
+                                    f"  AND description = :description "
+                                    f"  AND owner_id = :owner_id",
+                              params={"location": location, "description": description, "owner_id": current_user.id})
 
     return "Storage unit has successfully been removed from the DB"
 

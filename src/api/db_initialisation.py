@@ -43,15 +43,11 @@ def make_db_admin_user(db_conn: MariaDB) -> None:
     """
     with open(f'{SRC}env.yml', 'r') as file:
         env = yaml.safe_load(file)
-    print(db_conn.execute_query_select(query="select * from cellar.owners"))
-    db_conn.execute_query(query=f"INSERT INTO cellar.owners (name, username, password, scopes, is_admin, enabled) "
-                                f"VALUES "
-                                f"(:name, :username, "
-                                f":password, '', 1, 1)",
+    db_conn.execute_query(query="INSERT INTO cellar.owners (name, username, password, scopes, is_admin, enabled) "
+                                "VALUES (:name, :username, :password, '', 1, 1)",
                           params={"name": env['DB_USER_NAME'],
                                   "username": env['DB_USER'],
                                   "password": get_password_hash(password=env['DB_PW'])})
-    print(db_conn.execute_query_select(query=f"select * from cellar.owners where username='{env['DB_USER_NAME']}'"))
 
 
 def check_for_cellar_db(db_conn: MariaDB) -> bool:
