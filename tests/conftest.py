@@ -41,6 +41,21 @@ def token_non_existing_user(test_app):
 
 
 @pytest.fixture()
+def new_storage_unit(test_app):
+    def add_new_unit(storage_unit_data: dict, token: dict):
+        # add a storage unit
+        response = test_app.post(url='/cellar/storages/add',
+                                 data=json.dumps(storage_unit_data),
+                                 headers={"content-type": "application/json",
+                                          "Authorization": f"Bearer {token['access_token']}"}).json()
+        # return all storage units
+        return response, test_app.get(url='/cellar_views/storages/get',
+                                      headers={"content-type": "application/json",
+                                               "Authorization": f"Bearer {token['access_token']}"}).json()
+    return add_new_unit
+
+
+@pytest.fixture()
 def new_user(test_app):
     def set_user_scopes(data: dict, token: dict):
         test_app.post(url='/users/add',
@@ -108,6 +123,19 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
         def __exit__(self, *exc_info):
             pass
 
+        def _add_auto_increment_on_insert(self, query: str, table: str) -> str:
+            query_part = f"INSERT INTO {table} ("
+            if query_part in query:
+                ids = self.execute_query_select(f"select id from {table}")
+                if ids:
+                    max_id = max([id[0] for id in ids])
+                else:
+                    max_id = 0
+                query = (query
+                         .replace(query_part, f"{query_part}id, ")
+                         .replace('VALUES (', f'VALUES ({max_id}, '))
+            return query
+
         def _alter_query(self, query: str) -> str:
             query = (query.replace('AUTO_INCREMENT', '')
                      .replace(')s', '')
@@ -118,15 +146,20 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                      .replace('NOT NULL', '')
                      .replace('TRUNCATE TABLE', 'DELETE FROM'))
 
-            # make sure to insert a unique id when initializing the db
+            # make sure to insert a unique id when adding a user to the db
+
             if 'INSERT INTO owners (name' in query:
-                ids = self.execute_query_select("select id from owners")
-                if ids:
-                    max_id = max([id[0] for id in ids])
-                else:
-                    max_id = 0
-                query = (query.replace('INSERT INTO owners (name', 'INSERT INTO owners (id, name')
-                         .replace('VALUES (', f'VALUES ({max_id}, '))
+                query = self._add_auto_increment_on_insert(query=query, table='owners')
+                # ids = self.execute_query_select("select id from owners")
+                # if ids:
+                #     max_id = max([id[0] for id in ids])
+                # else:
+                #     max_id = 0
+                # query = (query
+                #          .replace('INSERT INTO owners (name', 'INSERT INTO owners (id, name')
+                #          .replace('VALUES (', f'VALUES ({max_id}, '))
+            elif 'INSERT INTO storages (owner_id' in query:
+                query = self._add_auto_increment_on_insert(query=query, table='storages')
             return query
 
         def _show_query_patch(self, query: str):
@@ -213,3 +246,28 @@ def cellar_all_user_data():
 def inactive_user_data():
     return {'id': 5, 'name': 'inactive', 'username': 'inactive', 'password': 'inactive',
             'scopes': '', 'is_admin': 0, 'enabled': 0}
+
+
+@pytest.fixture()
+def fake_storage_unit_1():
+    return {"id": 1, "location": "fake_storage_1", "description": "fake_storage_description"}
+
+
+@pytest.fixture()
+def fake_storage_unit_2():
+    return {"id": 2, "location": "fake_storage_2", "description": "fake_storage_description_2"}
+
+
+@pytest.fixture()
+def fake_storage_unit_3():
+    return {"id": 3, "location": "fake_storage_3", "description": "fake_storage_description_3"}
+
+
+@pytest.fixture()
+def fake_storage_unit_4():
+    return {"id": 4, "location": "fake_storage_4", "description": "fake_storage_description_4"}
+
+
+@pytest.fixture()
+def fake_storage_unit_non_existing():
+    return {"id": 5, "location": "fake_storage_non_existing", "description": "fake_storage_non_existing"}

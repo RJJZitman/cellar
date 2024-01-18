@@ -6,10 +6,15 @@ from fastapi import status
 
 
 @pytest.mark.unit
-def test_post_storage_unit(test_app, token_new_user, cellar_all_user_data):
+def test_post_storage_unit(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_3):
     user_data = cellar_all_user_data
     token = token_new_user(data=user_data)
-    storage_unit_data = {"location": "fake_storage_1", "description": "fake_storage_description"}
+    storage_unit_data = fake_storage_unit_3
+    # post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
+
+    # user_data = cellar_all_user_data
+    # token = token_new_user(data=user_data)
+    # storage_unit_data = {"location": "fake_storage_1", "description": "fake_storage_description"}
     # add a storage unit
     response = test_app.post(url='/cellar/storages/add',
                              data=json.dumps(storage_unit_data),
@@ -21,15 +26,20 @@ def test_post_storage_unit(test_app, token_new_user, cellar_all_user_data):
 
 
 @pytest.mark.unit
-def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data):
+def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_4):
     user_data = cellar_all_user_data
     token = token_new_user(data=user_data)
-    storage_unit_data = {"location": "del_fake_storage", "description": "del_fake_storage_description"}
+    storage_unit_data = fake_storage_unit_4
+    post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
+
+    # user_data = cellar_all_user_data
+    # token = token_new_user(data=user_data)
+    # storage_unit_data = {"location": "del_fake_storage", "description": "del_fake_storage_description"}
     # add a storage unit and collect all units
-    test_app.post(url='/cellar/storages/add',
-                  data=json.dumps(storage_unit_data),
-                  headers={"content-type": "application/json",
-                           "Authorization": f"Bearer {token['access_token']}"})
+    # test_app.post(url='/cellar/storages/add',
+    #               data=json.dumps(storage_unit_data),
+    #               headers={"content-type": "application/json",
+    #                        "Authorization": f"Bearer {token['access_token']}"})
     storages_pre = test_app.get(url='/cellar_views/storages/get',
                                 headers={"content-type": "application/json",
                                          "Authorization": f"Bearer {token['access_token']}"})
