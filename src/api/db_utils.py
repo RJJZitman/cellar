@@ -91,12 +91,8 @@ class MariaDB:
         :param query: The query that is executed
         :param params: Optional extra query params
         """
-        try:
-            with self.connection.begin() as trans:
-                self.cursor.execute(operation=query, params=params)
-        except Exception as e:
-            print(f"Error executing query: {e}")
-            raise Exception(str(e))
+        with self.connection.begin() as trans:
+            self.cursor.execute(operation=query, params=params)
 
     def execute_query_select(self, query: str, params: dict[str, Any] | list | tuple | None = None,
                              get_fields: bool = False) -> Any:

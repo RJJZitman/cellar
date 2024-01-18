@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS `cellar`.`cellar`(
      `quantity` INT UNSIGNED,
      `drink_from` DATE,
      `drink_before` DATE,
+     CONSTRAINT quantity_constraint CHECK (quantity>=0),
      PRIMARY KEY (id)
 );
 

@@ -50,3 +50,23 @@ class CellarInModel(BaseModel):
     bottle_size_cl: float = Field(gt=0)
     quantity: int = Field(gt=0)
     wine_info: WinesModel
+
+
+class ConsumedBottleModel(BaseModel):
+    wine_id: int = Field(gt=0)
+    storage_unit: int = Field(gt=0)
+    bottle_size_cl: float = Field(gt=0, default=75)
+    quantity: int = Field(gt=0)
+
+
+class RatingModel(BaseModel):
+    rating: int = Field(gt=0, le=100, description="Rating on the Robert Parker scale", default=1)
+    drinking_date: datetime.date | str = Field(description="When did you drink the rated beverage?")
+    comments: str | None = Field(max_length=2000, default="None",
+                                 description="Any additional comments such as tasting notes can be placed here.")
+
+
+class RatingInDbModel(RatingModel):
+    id: int
+    rater_id: int
+    wine_id: int
