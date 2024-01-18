@@ -3,7 +3,6 @@ import json
 import pytest
 
 from fastapi import status
-from sqlalchemy.exc import IntegrityError
 
 
 @pytest.mark.unit
@@ -43,7 +42,7 @@ def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data):
 
     storages_post = test_app.get(url='/cellar_views/storages/get',
                                  headers={"content-type": "application/json",
-                                         "Authorization": f"Bearer {token['access_token']}"})
+                                          "Authorization": f"Bearer {token['access_token']}"})
     storage_unit_data["owner_id"] = user_data["id"]
     storage_unit_data["id"] = None
 
