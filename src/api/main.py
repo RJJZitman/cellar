@@ -15,7 +15,7 @@ from fastapi import FastAPI, Depends, HTTPException, Request
 from .db_utils import MariaDB
 from .auth_utils import BasicAuth
 from .db_initialisation import db_setup
-from .routers import users_router, cellar_router
+from .routers import users_router, cellar_router, cellar_views_router
 from .constants import ACCESS_TOKEN_EXPIRATION_MIN, OPENAPI_URL, SRC, DB_CREDS, DB_CONN
 from .authentication import get_current_active_user, authenticate_user, create_access_token
 
@@ -38,6 +38,7 @@ basic_auth = BasicAuth(auto_error=False)
 
 app.include_router(users_router.router)
 app.include_router(cellar_router.router)
+app.include_router(cellar_views_router.router)
 
 
 @app.get('/', include_in_schema=False)

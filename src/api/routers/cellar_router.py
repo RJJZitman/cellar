@@ -10,38 +10,16 @@ from .cellar_funcs import (get_storage_id, verify_storage_exists, verify_empty_s
 from ..db_utils import MariaDB
 from ..constants import DB_CONN
 from ..authentication import get_current_active_user
-from ..models import (OwnerModel, StorageInModel, StorageOutModel, CellarInModel, RatingModel, RatingInDbModel,
-                      ConsumedBottleModel)
+from ..models import OwnerModel, StorageInModel, CellarInModel, RatingModel, RatingInDbModel, ConsumedBottleModel
 
 
 router = APIRouter(prefix="/cellar",
                    tags=["cellar"],
-                   dependencies=[Security(get_current_active_user, scopes=['CELLAR:READ'])],
+                   dependencies=[Security(get_current_active_user, scopes=['CELLAR:READ', 'CELLAR:WRITE'])],
                    responses={404: {"description": "Not Found"}})
 
 
-@router.get("/owners/get", response_model=list[OwnerModel], dependencies=[Security(get_current_active_user)])
-async def get_owners(db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
-    """
-    Retrieve all registered wine/beer owners.
-    Required scope(s): CELLAR:READ
-    """
-    return db_conn.execute_query_select(query="SELECT * FROM cellar.owners", get_fields=True)
-
-
-@router.get("/storages/get", response_model=list[StorageOutModel], dependencies=[Security(get_current_active_user)])
-async def get_storage_units(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
-                            current_user: Annotated[OwnerModel, Depends(get_current_active_user)]):
-    """
-    Retrieve all owners registered within the DB.
-    Required scope(s): CELLAR:READ
-    """
-    return db_conn.execute_query_select(query="SELECT * FROM cellar.storages WHERE owner_id = %(owner_id)s",
-                                        params={"owner_id": current_user.id},
-                                        get_fields=True)
-
-
-@router.post("/storages/add", dependencies=[Security(get_current_active_user, scopes=['CELLAR:WRITE'])])
+@router.post("/storages/add", dependencies=[Security(get_current_active_user)])
 async def post_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                             current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                             storage_data: StorageInModel) -> str:
@@ -57,7 +35,7 @@ async def post_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     return "Storage unit has successfully been added to the DB"
 
 
-@router.delete("/storages/delete", dependencies=[Security(get_current_active_user, scopes=['CELLAR:WRITE'])])
+@router.delete("/storages/delete", dependencies=[Security(get_current_active_user)])
 async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                               current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                               location: Annotated[str, Query(max_length=200)],
@@ -150,39 +128,6 @@ async def get_wine_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
         # originating from the OwnerModel and thus enforcing the value to be an integer
         query = f"{query} AND rater_id = '{current_user.id}'"
     return db_conn.execute_query_select(query=query, params={"wine_id": wine_id}, get_fields=True)
-
-
-@router.get("/wine_in_cellar/get_your_ratings", dependencies=[Security(get_current_active_user)])
-async def get_your_ratings(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
-                           current_user: Annotated[OwnerModel, Depends(get_current_active_user)]
-                           ) -> list[RatingInDbModel]:
-    """
-    Retrieves all your ratings for all wines/bottles.
-    """
-    # Retrieve the ratings from the DB
-    return db_conn.execute_query_select(query="SELECT * FROM cellar.ratings WHERE rater_id = %(rater_id)s",
-                                        params={"rater_id": current_user.id}, get_fields=True)
-
-
-@router.delete("/wine_in_cellar/remove_rating", dependencies=[Security(get_current_active_user)])
-async def delete_a_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
-                          current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
-                          rating_id: int) -> str:
-    """
-    Removes one of your ratings from the DB. Make sure to provide a valid rating_id. Make use of the
-    '/wine_in_cellar/get_wine_ratings' endpoint with the 'only_your_ratings' argument set to True in order to see your
-    ratings on a specific wine. Or exploit the '/wine_in_cellar/get_your_ratings' endpoint for a full overview of your
-    ratings.
-    """
-    # Verify the wine exists in the DB
-    if not await rating_in_db(db_conn=db_conn, rating_id=rating_id, user_id=current_user.id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Rating with rating_id: {rating_id} is not found in the DB or the rating is not "
-                                   f"not provided by you. Make sure to use an valid rating ID in order to delete "
-                                   f"the correct rating")
-    db_conn.execute_query(query="DELETE FROM cellar.ratings WHERE id = %(rating_id)s",
-                          params={"rating_id": rating_id})
-    return "Rating has successfully been removed from the DB"
 
 
 @router.patch("/wine_in_cellar/consumed", dependencies=[Security(get_current_active_user)])
