@@ -104,16 +104,24 @@ async def verify_bottle_exists_in_storage_unit(db_conn: MariaDB, wine_id: int, s
 async def update_quantity_in_cellar(db_conn: MariaDB, wine_id: int, bottle_data: CellarInModel | ConsumedBottleModel,
                                     add: bool) -> None:
     quantity_operator = "+" if add else "-"
+    params = {"quantity": str(bottle_data.quantity),
+              "wine_id": str(wine_id),
+              "storage_unit": str(bottle_data.storage_unit),
+              "bottle_size_cl": str(bottle_data.bottle_size_cl)}
+    query_conditions = ("wine_id = %(wine_id)s "
+                        "AND storage_unit = %(storage_unit)s "
+                        "AND bottle_size_cl = %(bottle_size_cl)s")
     try:
         # Update the quantity by adding or subtracting the desired value
         db_conn.execute_query(query=f"UPDATE cellar.cellar "
                                     f"SET quantity = quantity {quantity_operator} %(quantity)s "
-                                    f"WHERE wine_id = %(wine_id)s "
-                                    f"  AND storage_unit = %(storage_unit)s "
-                                    f"  AND bottle_size_cl = %(bottle_size_cl)s",
-                              params={"quantity": str(bottle_data.quantity),
-                                      "wine_id": str(wine_id), "storage_unit": str(bottle_data.storage_unit),
-                                      "bottle_size_cl": str(bottle_data.bottle_size_cl)})
+                                    f"WHERE {query_conditions}",
+                              params=params)
+        # Remove record matching the bottle if quantity is brought back to zero
+        db_conn.execute_query(query=f"DELETE FROM cellar.cellar "
+                                    f"WHERE quantity = 0 AND {query_conditions}",
+                              params=params)
+
     except DataError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="There aren't that many bottles left in your cellar or storage unit. Make sure to "
