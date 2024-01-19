@@ -47,7 +47,7 @@ class WinesModel(BaseModel):
 
 class CellarInModel(BaseModel):
     storage_unit: int = Field(gt=0)
-    bottle_size_cl: float = Field(gt=0)
+    bottle_size_cl: float = Field(gt=0, default=75)
     quantity: int = Field(gt=0)
     wine_info: WinesModel
 

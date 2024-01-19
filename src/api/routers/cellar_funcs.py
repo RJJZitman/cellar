@@ -39,15 +39,16 @@ async def verify_storage_exists(db_conn: MariaDB, storage_id: int) -> bool:
 async def verify_empty_storage_unit(db_conn: MariaDB, storage_id: int) -> bool:
     storage = db_conn.execute_query_select(query="SELECT * FROM cellar.cellar "
                                                  "WHERE storage_unit = %(storage_id)s",
-                                           params={"storage_id": str(storage_id)})
-    if storage:
+                                           params={"storage_id": storage_id},
+                                           get_fields=True)
+    print(storage, len(storage), storage_id)
+    if len(storage):
         # Raise 400 error for non-empty storage unit.
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"Storage unit is not empty. Make sure to either drink it all or move the bottles "
-                                   f"to another storage unit. Bottles left in unit: {[bottle for bottle in storage]}")
+                                   f"to another storage unit. Bottles left in unit: {storage}")
     else:
         return True
-
 
 async def verify_wine_in_db(db_conn: MariaDB, name: str, vintage: int) -> bool:
     wine = db_conn.execute_query_select(query="SELECT * FROM cellar.wines "

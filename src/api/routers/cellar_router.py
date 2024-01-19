@@ -52,7 +52,7 @@ async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
     # Remove the storage unit from DB if it is empty.
     # Note that `verify_empty_storage_unit` raises and error if the storage unit is not empty
-    if await verify_empty_storage_unit(db_conn=db_conn, storage_id=storage_id):
+    if await verify_empty_storage_unit(db_conn=db_conn, storage_id=storage_id[0]):
         db_conn.execute_query(query="DELETE FROM cellar.storages "
                                     "WHERE location = %(location)s "
                                     "  AND description = %(description)s "
