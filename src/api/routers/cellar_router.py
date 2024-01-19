@@ -4,13 +4,13 @@ from fastapi import HTTPException, status
 from fastapi import APIRouter, Depends, Security, Query
 
 from .cellar_funcs import (get_storage_id, verify_storage_exists, verify_empty_storage_unit, verify_wine_in_db,
-                           add_wine_to_db, get_bottle_id, add_bottle_to_cellar, wine_in_db, rating_in_db,
-                           add_rating_to_db, update_quantity_in_cellar)
+                           add_wine_to_db, get_bottle_id, add_bottle_to_cellar, wine_in_db, add_rating_to_db,
+                           update_quantity_in_cellar)
 
 from ..db_utils import MariaDB
 from ..constants import DB_CONN
 from ..authentication import get_current_active_user
-from ..models import OwnerModel, StorageInModel, CellarInModel, RatingModel, RatingInDbModel, ConsumedBottleModel
+from ..models import OwnerModel, StorageInModel, CellarInModel, RatingModel, ConsumedBottleModel
 
 
 router = APIRouter(prefix="/cellar",
@@ -128,4 +128,3 @@ async def remove_consumed_from_stock(db_conn: Annotated[MariaDB, Depends(DB_CONN
 
     await update_quantity_in_cellar(db_conn=db_conn, wine_id=bottle_data.wine_id, bottle_data=bottle_data, add=False)
     return "Consumed bottle is updated in the DB"
-

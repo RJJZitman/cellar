@@ -32,7 +32,7 @@ async def test_get_storage_id(test_app, token_new_user, cellar_all_user_data, ne
     storage_id = await cellar_funcs.get_storage_id(db_conn=db_test_conn, current_user=OwnerModel(**user_data),
                                                    location=storage_unit_data['location'],
                                                    description=storage_unit_data['description'])
-    assert storage_id[0] == get_resp[0]['id']
+    assert storage_id[0] == get_resp[-1]['id']
 
 # @pytest.mark.unit
 # def test_get_storage_id_non_existing(test_app, token_new_user, cellar_all_user_data, new_storage_unit,
@@ -47,4 +47,3 @@ async def test_get_storage_id(test_app, token_new_user, cellar_all_user_data, ne
 #                                              location=storage_unit_data['location'],
 #                                              description=storage_unit_data['description'])
 #     assert storage_id
-

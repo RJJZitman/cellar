@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 from fastapi_pagination import add_pagination
 
-from api import dependencies, db_initialisation, db_utils, constants
+from api import dependencies, db_initialisation, constants
 
 SQLITE_DB_URL = 'sqlite://'
 
@@ -126,14 +126,15 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
         def _add_auto_increment_on_insert(self, query: str, table: str) -> str:
             query_part = f"INSERT INTO {table} ("
             if query_part in query:
-                ids = self.execute_query_select(f"select id from {table}")
+                ids = self.execute_query_select(query=f"select id from {table}")
+
                 if ids:
-                    max_id = max([id[0] for id in ids])
+                    new_max_id = max([id[0] for id in ids]) + 1
                 else:
-                    max_id = 0
+                    new_max_id = 0
                 query = (query
                          .replace(query_part, f"{query_part}id, ")
-                         .replace('VALUES (', f'VALUES ({max_id}, '))
+                         .replace('VALUES (', f'VALUES ({new_max_id}, '))
             return query
 
         def _alter_query(self, query: str) -> str:
@@ -147,17 +148,8 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                      .replace('TRUNCATE TABLE', 'DELETE FROM'))
 
             # make sure to insert a unique id when adding a user to the db
-
             if 'INSERT INTO owners (name' in query:
                 query = self._add_auto_increment_on_insert(query=query, table='owners')
-                # ids = self.execute_query_select("select id from owners")
-                # if ids:
-                #     max_id = max([id[0] for id in ids])
-                # else:
-                #     max_id = 0
-                # query = (query
-                #          .replace('INSERT INTO owners (name', 'INSERT INTO owners (id, name')
-                #          .replace('VALUES (', f'VALUES ({max_id}, '))
             elif 'INSERT INTO storages (owner_id' in query:
                 query = self._add_auto_increment_on_insert(query=query, table='storages')
             return query
@@ -250,7 +242,7 @@ def inactive_user_data():
 
 @pytest.fixture()
 def fake_storage_unit_1():
-    return {"id": 1, "location": "fake_storage_1", "description": "fake_storage_description"}
+    return {"id": 1, "location": "fake_storage_1", "description": "fake_storage_description_1"}
 
 
 @pytest.fixture()
