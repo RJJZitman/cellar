@@ -1,4 +1,6 @@
 import json
+import string
+import random
 
 from typing import Any
 
@@ -8,8 +10,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 from fastapi_pagination import add_pagination
+from polyfactory.pytest_plugin import register_fixture
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 from api import dependencies, db_initialisation, constants
+from api.models import CellarInModel, ConsumedBottleModel
 
 SQLITE_DB_URL = 'sqlite://'
 
@@ -77,6 +82,42 @@ def token_new_user(test_app, new_user, token_admin):
         return response.json()
 
     return get_token
+
+
+@register_fixture
+class CellarInModelFactory(ModelFactory[CellarInModel]):
+    ...
+
+
+@register_fixture
+class ConsumedBottleModelFactory(ModelFactory[ConsumedBottleModel]):
+    ...
+
+
+@pytest.fixture()
+def bottle_cellar_fixture(test_app, new_user, cellar_in_model_factory: CellarInModelFactory,
+                          consumed_bottle_model_factory: ConsumedBottleModelFactory):
+    def bottle_cellar(token: dict, add: bool, quantity: int, storage_unit: int):
+        if add:
+            dummy_wine = cellar_in_model_factory.build()
+            dummy_wine.quantity = quantity
+            dummy_wine.storage_unit = storage_unit
+            response = test_app.post(url='/cellar/wine_in_cellar/add',
+                                     data=json.dumps(dummy_wine.dict(), default=str),
+                                     headers={"content-type": "application/json",
+                                              "Authorization": f"Bearer {token['access_token']}"})
+        else:
+            dummy_wine = consumed_bottle_model_factory.build()
+            dummy_wine.quantity = quantity
+            dummy_wine.storage_unit = storage_unit
+            response = test_app.patch(url='/cellar/wine_in_cellar/consumed?rate_bottle=false',
+                                      data=json.dumps({"bottle_data": dummy_wine.dict()}, default=str),
+                                      # data={"bottle_data": dummy_wine.dict()},
+                                      headers={"content-type": "application/json",
+                                               "Authorization": f"Bearer {token['access_token']}"})
+        return response.json(), dummy_wine
+
+    return bottle_cellar
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -152,6 +193,8 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                 query = self._add_auto_increment_on_insert(query=query, table='owners')
             elif 'INSERT INTO storages (owner_id' in query:
                 query = self._add_auto_increment_on_insert(query=query, table='storages')
+            elif 'INSERT INTO wines (name' in query:
+                query = self._add_auto_increment_on_insert(query=query, table='wines')
             return query
 
         def _show_query_patch(self, query: str):
@@ -261,5 +304,35 @@ def fake_storage_unit_4():
 
 
 @pytest.fixture()
+def fake_storage_unit_5():
+    return {"id": 5, "location": "fake_storage_5", "description": "fake_storage_description_5"}
+
+
+@pytest.fixture()
+def fake_storage_unit_6():
+    return {"id": 6, "location": "fake_storage_6", "description": "fake_storage_description_6"}
+
+
+@pytest.fixture()
+def fake_storage_unit_7():
+    return {"id": 7, "location": "fake_storage_7", "description": "fake_storage_description_7"}
+
+
+@pytest.fixture()
+def fake_storage_unit_8():
+    return {"id": 8, "location": "fake_storage_8", "description": "fake_storage_description_8"}
+
+
+@pytest.fixture()
+def fake_storage_unit_9():
+    return {"id": 9, "location": "fake_storage_9", "description": "fake_storage_description_9"}
+
+
+@pytest.fixture()
+def fake_storage_unit_10():
+    return {"id": 10, "location": "fake_storage_10", "description": "fake_storage_description_10"}
+
+
+@pytest.fixture()
 def fake_storage_unit_non_existing():
-    return {"id": 5, "location": "fake_storage_non_existing", "description": "fake_storage_non_existing"}
+    return {"id": 0, "location": "fake_storage_non_existing", "description": "fake_storage_non_existing"}
