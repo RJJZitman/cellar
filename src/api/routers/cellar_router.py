@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import HTTPException, status
 from fastapi import APIRouter, Depends, Security, Query
 
-from .cellar_funcs import (get_storage_id, verify_storage_exists, verify_empty_storage_unit, verify_wine_in_db,
+from .cellar_funcs import (get_storage_id, verify_storage_exists_for_user, verify_empty_storage_unit, verify_wine_in_db,
                            add_wine_to_db, get_bottle_id, add_bottle_to_cellar, wine_in_db, add_rating_to_db,
                            update_quantity_in_cellar)
 
@@ -71,9 +71,10 @@ async def add_wine_to_cellar(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     add wines to from the '/storages/get' endpoint.
     """
     # Check if storage unit is valid
-    if not await verify_storage_exists(db_conn=db_conn, storage_id=wine_data.storage_unit):
+    if not await verify_storage_exists_for_user(db_conn=db_conn, storage_id=wine_data.storage_unit,
+                                                user_id=current_user.id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Storage unit is not found.")
+                            detail="Storage unit is not found for your particular user.")
 
     # Inspect if the wine is already in the wines table
     if not await verify_wine_in_db(db_conn=db_conn, name=wine_data.wine_info.name, vintage=wine_data.wine_info.vintage):
@@ -128,3 +129,21 @@ async def remove_consumed_from_stock(db_conn: Annotated[MariaDB, Depends(DB_CONN
 
     await update_quantity_in_cellar(db_conn=db_conn, wine_id=bottle_data.wine_id, bottle_data=bottle_data, add=False)
     return "Consumed bottle is updated in the DB"
+
+
+@router.patch("/wine_in_cellar/move", dependencies=[Security(get_current_active_user)])
+async def move_bottle_to_other_storage(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+                                       current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
+                                       cellar_id: int,
+                                       new_storage_unit: int) -> str:
+    """
+    Move a bottle from one storage unit to another.
+    """
+    if verify_storage_exists_for_user(db_conn=db_conn, storage_id=new_storage_unit, user_id=current_user.id):
+        db_conn.execute_query(query=("UPDATE cellar.cellar "
+                                     "SET storage_unit = %(storage_unit)s WHERE id = %(cellar_id)s"),
+                              params={"storage_unit": new_storage_unit, "cellar_id": cellar_id})
+        return f"Bottle has successfully been transferred to storage unit {new_storage_unit}"
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Storage unit is not found for your particular user.")

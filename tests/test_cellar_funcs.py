@@ -64,14 +64,16 @@ async def test_verify_storage_exists(test_app, token_new_user, cellar_all_user_d
     storage_unit_data = fake_storage_unit_2
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
-    assert await cellar_funcs.verify_storage_exists(db_conn=db_test_conn,storage_id=get_resp[0]['id'])
+    assert await cellar_funcs.verify_storage_exists_for_user(db_conn=db_test_conn, storage_id=get_resp[0]['id'],
+                                                             user_id=user_data['id'])
 
 
 @pytest.mark.asyncio
-async def test_verify_storage_exists_non_existing(test_app, cellar_all_user_data, new_storage_unit,
-                                                  fake_storage_unit_non_existing, db_monkeypatch):
+async def test_verify_storage_exists_non_existing(test_app, cellar_all_user_data, db_monkeypatch):
     db_test_conn = db_monkeypatch
-    assert not await cellar_funcs.verify_storage_exists(db_conn=db_test_conn,storage_id=10**6)
+    user_data = cellar_all_user_data
+    assert not await cellar_funcs.verify_storage_exists_for_user(db_conn=db_test_conn, storage_id=10**6,
+                                                                 user_id=user_data['id'])
 
 
 @pytest.mark.asyncio

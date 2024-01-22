@@ -24,11 +24,11 @@ async def get_storage_id(db_conn: MariaDB, current_user: OwnerModel, location: s
                             detail="Storage unit is not found.")
 
 
-async def verify_storage_exists(db_conn: MariaDB, storage_id: int) -> bool:
+async def verify_storage_exists_for_user(db_conn: MariaDB, storage_id: int, user_id: int) -> bool:
     info = db_conn.execute_query_select(query="SELECT location, description "
                                               "FROM cellar.storages "
-                                              "WHERE id = %(storage_id)s",
-                                        params={"storage_id": storage_id},
+                                              "WHERE id = %(storage_id)s AND owner_id = %(user_id)s",
+                                        params={"storage_id": storage_id, "user_id": user_id},
                                         get_fields=True)
     if len(info):
         return True
@@ -172,3 +172,5 @@ async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating:
                                 "VALUES (%(rater_id)s, %(wine_id)s, %(rating)s, %(drinking_date)s, %(comments)s)",
                           params={"rater_id": user_id, "wine_id": wine_id, "rating": rating.rating,
                                   "drinking_date": rating.drinking_date, "comments": rating.comments})
+
+
