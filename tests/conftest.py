@@ -195,6 +195,8 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                 query = self._add_auto_increment_on_insert(query=query, table='storages')
             elif 'INSERT INTO wines (name' in query:
                 query = self._add_auto_increment_on_insert(query=query, table='wines')
+            elif "INSERT INTO ratings (rater_id" in query:
+                query = self._add_auto_increment_on_insert(query=query, table='ratings')
             return query
 
         def _show_query_patch(self, query: str):
@@ -356,6 +358,11 @@ def fake_storage_unit_13():
 @pytest.fixture()
 def fake_storage_unit_14():
     return {"id": 14, "location": "fake_storage_14", "description": "fake_storage_description_14"}
+
+
+@pytest.fixture()
+def fake_storage_unit_15():
+    return {"id": 15, "location": "fake_storage_15", "description": "fake_storage_description_15"}
 
 
 @pytest.fixture()
