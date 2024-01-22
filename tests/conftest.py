@@ -1,6 +1,4 @@
 import json
-import string
-import random
 
 from typing import Any
 
@@ -12,6 +10,8 @@ from fastapi.testclient import TestClient
 from fastapi_pagination import add_pagination
 from polyfactory.pytest_plugin import register_fixture
 from polyfactory.factories.pydantic_factory import ModelFactory
+from sqlalchemy.exc import IntegrityError
+from mysql.connector.errors import DataError
 
 from api import dependencies, db_initialisation, constants
 from api.models import CellarInModel, ConsumedBottleModel
@@ -233,7 +233,12 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                 return
             elif ' database if ' in query.lower():
                 return False
-            self.conn.execute(self._alter_query(query), params)
+
+            try:
+                # Error patch, MariaDB DataError corresponds to sqllite3 IntegrityError
+                self.conn.execute(self._alter_query(query), params)
+            except IntegrityError:
+                raise DataError()
 
         def execute_sql_file(self, file_path: str, params: Any | None = None, multi: bool = False) -> None:
             with open(file=file_path, mode='r') as sql_file:
@@ -331,6 +336,26 @@ def fake_storage_unit_9():
 @pytest.fixture()
 def fake_storage_unit_10():
     return {"id": 10, "location": "fake_storage_10", "description": "fake_storage_description_10"}
+
+
+@pytest.fixture()
+def fake_storage_unit_11():
+    return {"id": 11, "location": "fake_storage_11", "description": "fake_storage_description_11"}
+
+
+@pytest.fixture()
+def fake_storage_unit_12():
+    return {"id": 12, "location": "fake_storage_12", "description": "fake_storage_description_12"}
+
+
+@pytest.fixture()
+def fake_storage_unit_13():
+    return {"id": 13, "location": "fake_storage_13", "description": "fake_storage_description_13"}
+
+
+@pytest.fixture()
+def fake_storage_unit_14():
+    return {"id": 14, "location": "fake_storage_14", "description": "fake_storage_description_14"}
 
 
 @pytest.fixture()

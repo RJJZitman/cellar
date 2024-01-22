@@ -91,7 +91,7 @@ async def get_bottle_id(db_conn: MariaDB, name: str, vintage: int) -> bool:
 async def verify_bottle_exists_in_storage_unit(db_conn: MariaDB, wine_id: int, storage_unit: int, bottle_size: float
                                                ) -> bool:
     in_storage_unit = db_conn.execute_query_select(query="SELECT * FROM cellar.cellar "
-                                                         "WHERE id = %(wine_id)s "
+                                                         "WHERE wine_id = %(wine_id)s "
                                                          "   AND storage_unit = %(storage_unit)s "
                                                          "   AND bottle_size_cl = %(bottle_size_cl)s",
                                                    params={"wine_id": wine_id, "storage_unit": storage_unit,
