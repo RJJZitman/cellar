@@ -45,10 +45,27 @@ class WinesModel(BaseModel):
                                           default="None")
 
 
-class CellarInModel(BaseModel):
+class CellarMinimalModel(BaseModel):
     storage_unit: int = Field(gt=0)
     bottle_size_cl: float = Field(gt=0, default=75)
     quantity: int = Field(gt=0)
+
+
+class CellarOutModel(BaseModel):
+    name: str = Field(max_length=200)
+    vintage: int = Field(gt=0, lt=3000, default=CURRENT_YEAR)
+    storage_unit: int = Field(gt=0)
+    bottle_size_cl: float = Field(gt=0, default=75)
+    quantity: int = Field(gt=0)
+    wine_id: int = Field(gt=0)
+    owner_id: int = Field(gt=0)
+    drink_from: datetime.date = Field(description="The year from which you would suggest drinking the wine.",
+                                      default_factory=lambda x: datetime.datetime.strptime(
+                                          str(x.vintage).rjust(5, '0'), '%Y').date())
+    drink_before: datetime.date = Field(description="The last year in which you would suggest drinking the wine.")
+
+
+class CellarInModel(CellarMinimalModel):
     wine_info: WinesModel
 
 

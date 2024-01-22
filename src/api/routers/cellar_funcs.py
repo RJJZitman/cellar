@@ -172,5 +172,3 @@ async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating:
                                 "VALUES (%(rater_id)s, %(wine_id)s, %(rating)s, %(drinking_date)s, %(comments)s)",
                           params={"rater_id": user_id, "wine_id": wine_id, "rating": rating.rating,
                                   "drinking_date": rating.drinking_date, "comments": rating.comments})
-
-
