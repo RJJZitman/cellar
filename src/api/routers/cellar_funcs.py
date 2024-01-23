@@ -1,9 +1,12 @@
+from typing import Any
+
 from fastapi import HTTPException, status
 from mysql.connector.errors import DataError
 
 
 from ..db_utils import MariaDB
-from ..models import OwnerModel, WinesModel, CellarInModel, GeographicInfoModel, RatingModel, ConsumedBottleModel
+from ..models import (OwnerModel, WinesModel, CellarInModel, GeographicInfoModel, RatingModel, ConsumedBottleModel,
+                      CellarOutModel)
 
 
 def unpack_geo_info(geographic_info: GeographicInfoModel) -> str:
@@ -172,3 +175,20 @@ async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating:
                                 "VALUES (%(rater_id)s, %(wine_id)s, %(rating)s, %(drinking_date)s, %(comments)s)",
                           params={"rater_id": user_id, "wine_id": wine_id, "rating": rating.rating,
                                   "drinking_date": rating.drinking_date, "comments": rating.comments})
+
+
+def get_cellar_out_data(db_conn: MariaDB, params: dict[str, Any], where: str | None = None
+                              ) -> list[CellarOutModel]:
+    query = ("SELECT w.name AS name, w.vintage AS vintage, "
+             "       c.storage_unit AS storage_unit, c.quantity AS quantity,"
+             "       c.bottle_size_cl AS bottle_size_cl,"
+             "       c.wine_id AS wine_id, c.owner_id AS owner_id,"
+             "       c.drink_from AS drink_from, c.drink_before AS drink_before "
+             "FROM cellar.cellar AS c "
+             "LEFT JOIN cellar.wines AS w "
+             "    ON w.id = c.wine_id ")
+    if where:
+        query += where
+    else:
+        params = None
+    return db_conn.execute_query_select(query=query, params=params, get_fields=True)

@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import HTTPException, status
 from fastapi import APIRouter, Depends, Security
 
-from .cellar_funcs import wine_in_db
+from .cellar_funcs import wine_in_db, get_cellar_out_data
 
 from ..db_utils import MariaDB
 from ..constants import DB_CONN
@@ -77,28 +77,17 @@ async def get_your_ratings(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 @router.get("/wine_in_cellar/get_your_bottles", dependencies=[Security(get_current_active_user)])
 async def get_your_bottles(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                            current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
-                           storage_unit: int | None = None):# -> list[CellarOutModel]:
+                           storage_unit: int | None = None) -> list[CellarOutModel]:
     """
     Get an overview of all your bottles stored in your cellar. If the 'storage_unit' id is specified, only the bottles
-    in that specific storage unit are shown
+    in that specific storage unit are shown.
     """
     if storage_unit is None:
-        return db_conn.execute_query_select(query="SELECT * FROM cellar.cellar WHERE owner_id = %(user_id)s",
-                                            params={"user_id": current_user.id},
-                                            get_fields=True)
+        return get_cellar_out_data(db_conn=db_conn, params={"user_id": current_user.id},
+                                   where="WHERE c.owner_id = %(user_id)s")
     else:
-        return db_conn.execute_query_select(query=("SELECT "
-                                                   "       w.name AS name, w.vintage AS vintage, "
-                                                   "       c.storage_unit AS storage_unit,"
-                                                   "       c.bottle_size_cl AS bottle_size_cl,"
-                                                   "       c.wine_id AS wine_id, c.owner_id AS owner_id,"
-                                                   "       c.drink_from AS drink_from, c.drink_before AS drink_before"
-                                                   "FROM cellar.cellar AS c "
-                                                   "LEFT JOIN cellar.wines AS w "
-                                                   "    ON w.id = c.wine_id "
-                                                   "WHERE owner_id = %(user_id)s AND storage_unit = %(storage_unit)s"),
-                                            params={"user_id": current_user.id, "storage_unit": storage_unit},
-                                            get_fields=True)
+        return get_cellar_out_data(db_conn=db_conn, params={"user_id": current_user.id, "storage_unit": storage_unit},
+                                   where="WHERE c.owner_id = %(user_id)s AND storage_unit = %(storage_unit)s")
 
 
 @router.get("/wine_in_cellar/get_stock_on_bottle", dependencies=[Security(get_current_active_user)])
@@ -108,9 +97,6 @@ async def get_stock_on_bottle(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     """
     Get an overview of all your bottles of a specific bottle stored in your cellar.
     """
-
-    return db_conn.execute_query_select(query=("SELECT * FROM cellar.cellar "
-                                               "WHERE owner_id = %(user_id)s AND wine_id = %(wine_id)s"),
-                                        params={"user_id": current_user.id, "wine_id": wine_id},
-                                        get_fields=True)
+    return get_cellar_out_data(db_conn=db_conn, params={"user_id": current_user.id, "wine_id": wine_id},
+                               where="WHERE c.owner_id = %(user_id)s AND wine_id = %(wine_id)s")
 
