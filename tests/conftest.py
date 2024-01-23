@@ -290,81 +290,13 @@ def inactive_user_data():
             'scopes': '', 'is_admin': 0, 'enabled': 0}
 
 
-@pytest.fixture()
-def fake_storage_unit_1():
-    return {"id": 1, "location": "fake_storage_1", "description": "fake_storage_description_1"}
+@pytest.fixture(scope='session')
+def fake_storage_unit_x():
+    count = 0
 
+    def create_unit_data():
+        nonlocal count
+        count += 1
+        return {"id": count, "location": f"fake_storage_{count}", "description": f"fake_storage_description_{count}"}
+    return create_unit_data
 
-@pytest.fixture()
-def fake_storage_unit_2():
-    return {"id": 2, "location": "fake_storage_2", "description": "fake_storage_description_2"}
-
-
-@pytest.fixture()
-def fake_storage_unit_3():
-    return {"id": 3, "location": "fake_storage_3", "description": "fake_storage_description_3"}
-
-
-@pytest.fixture()
-def fake_storage_unit_4():
-    return {"id": 4, "location": "fake_storage_4", "description": "fake_storage_description_4"}
-
-
-@pytest.fixture()
-def fake_storage_unit_5():
-    return {"id": 5, "location": "fake_storage_5", "description": "fake_storage_description_5"}
-
-
-@pytest.fixture()
-def fake_storage_unit_6():
-    return {"id": 6, "location": "fake_storage_6", "description": "fake_storage_description_6"}
-
-
-@pytest.fixture()
-def fake_storage_unit_7():
-    return {"id": 7, "location": "fake_storage_7", "description": "fake_storage_description_7"}
-
-
-@pytest.fixture()
-def fake_storage_unit_8():
-    return {"id": 8, "location": "fake_storage_8", "description": "fake_storage_description_8"}
-
-
-@pytest.fixture()
-def fake_storage_unit_9():
-    return {"id": 9, "location": "fake_storage_9", "description": "fake_storage_description_9"}
-
-
-@pytest.fixture()
-def fake_storage_unit_10():
-    return {"id": 10, "location": "fake_storage_10", "description": "fake_storage_description_10"}
-
-
-@pytest.fixture()
-def fake_storage_unit_11():
-    return {"id": 11, "location": "fake_storage_11", "description": "fake_storage_description_11"}
-
-
-@pytest.fixture()
-def fake_storage_unit_12():
-    return {"id": 12, "location": "fake_storage_12", "description": "fake_storage_description_12"}
-
-
-@pytest.fixture()
-def fake_storage_unit_13():
-    return {"id": 13, "location": "fake_storage_13", "description": "fake_storage_description_13"}
-
-
-@pytest.fixture()
-def fake_storage_unit_14():
-    return {"id": 14, "location": "fake_storage_14", "description": "fake_storage_description_14"}
-
-
-@pytest.fixture()
-def fake_storage_unit_15():
-    return {"id": 15, "location": "fake_storage_15", "description": "fake_storage_description_15"}
-
-
-@pytest.fixture()
-def fake_storage_unit_non_existing():
-    return {"id": 0, "location": "fake_storage_non_existing", "description": "fake_storage_non_existing"}

@@ -6,10 +6,10 @@ from fastapi import status
 
 
 @pytest.mark.unit
-def test_post_storage_unit(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_6):
+def test_post_storage_unit(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_x):
     user_data = cellar_all_user_data
     token = token_new_user(data=user_data)
-    storage_unit_data = fake_storage_unit_6
+    storage_unit_data = fake_storage_unit_x()
     # add a storage unit
     response = test_app.post(url='/cellar/storages/add',
                              data=json.dumps(storage_unit_data),
@@ -21,10 +21,10 @@ def test_post_storage_unit(test_app, token_new_user, cellar_all_user_data, new_s
 
 
 @pytest.mark.unit
-def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_7):
+def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_x):
     user_data = cellar_all_user_data
     token = token_new_user(data=user_data)
-    storage_unit_data = fake_storage_unit_7
+    storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
     # delete the storage unit and verify that it is gone from the DB

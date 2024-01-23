@@ -20,10 +20,10 @@ def test_get_owners(test_app, token_new_user, cellar_read_user_data):
 
 
 @pytest.mark.unit
-def test_get_storage_units(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_8):
+def test_get_storage_units(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_x):
     user_data = cellar_all_user_data
     token = token_new_user(data=user_data)
-    storage_unit_data = fake_storage_unit_8
+    storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
     response = test_app.get(url='/cellar_views/storages/get',
                             headers={"content-type": "application/json",
