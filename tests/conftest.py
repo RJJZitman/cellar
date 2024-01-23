@@ -112,7 +112,6 @@ def bottle_cellar_fixture(test_app, new_user, cellar_in_model_factory: CellarInM
             dummy_wine.storage_unit = storage_unit
             response = test_app.patch(url='/cellar/wine_in_cellar/consumed?rate_bottle=false',
                                       data=json.dumps({"bottle_data": dummy_wine.dict()}, default=str),
-                                      # data={"bottle_data": dummy_wine.dict()},
                                       headers={"content-type": "application/json",
                                                "Authorization": f"Bearer {token['access_token']}"})
         return response.json(), dummy_wine
@@ -292,7 +291,7 @@ def inactive_user_data():
 
 @pytest.fixture(scope='session')
 def fake_storage_unit_x():
-    count = 0
+    count = -1
 
     def create_unit_data():
         nonlocal count

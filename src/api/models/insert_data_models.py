@@ -11,8 +11,8 @@ class StorageInModel(BaseModel):
 
 
 class StorageOutModel(StorageInModel):
-    id: int | None = None
-    owner_id: int
+    id: int | None = Field(ge=0, default=None)
+    owner_id: int = Field(ge=0)
 
 
 class GeographicInfoModel(BaseModel):
@@ -46,7 +46,7 @@ class WinesModel(BaseModel):
 
 
 class CellarMinimalModel(BaseModel):
-    storage_unit: int = Field(gt=0)
+    storage_unit: int = Field(ge=0)
     bottle_size_cl: float = Field(gt=0, default=75)
     quantity: int = Field(gt=0)
 
@@ -54,11 +54,11 @@ class CellarMinimalModel(BaseModel):
 class CellarOutModel(BaseModel):
     name: str = Field(max_length=200)
     vintage: int = Field(gt=0, lt=3000, default=CURRENT_YEAR)
-    storage_unit: int = Field(gt=0)
+    storage_unit: int = Field(ge=0)
     bottle_size_cl: float = Field(gt=0, default=75)
     quantity: int = Field(gt=0)
-    wine_id: int = Field(gt=0)
-    owner_id: int = Field(gt=0)
+    wine_id: int = Field(ge=0)
+    owner_id: int = Field(ge=0)
     drink_from: datetime.date = Field(description="The year from which you would suggest drinking the wine.",
                                       default_factory=lambda x: datetime.datetime.strptime(
                                           str(x.vintage).rjust(5, '0'), '%Y').date())
@@ -70,8 +70,8 @@ class CellarInModel(CellarMinimalModel):
 
 
 class ConsumedBottleModel(BaseModel):
-    wine_id: int = Field(gt=0)
-    storage_unit: int = Field(gt=0)
+    wine_id: int = Field(ge=0)
+    storage_unit: int = Field(ge=0)
     bottle_size_cl: float = Field(gt=0, default=75)
     quantity: int = Field(gt=0)
 
@@ -84,6 +84,6 @@ class RatingModel(BaseModel):
 
 
 class RatingInDbModel(RatingModel):
-    id: int
-    rater_id: int
-    wine_id: int
+    id: int = Field(ge=0)
+    rater_id: int = Field(ge=0)
+    wine_id: int = Field(ge=0)

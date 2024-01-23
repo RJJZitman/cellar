@@ -177,8 +177,8 @@ async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating:
                                   "drinking_date": rating.drinking_date, "comments": rating.comments})
 
 
-def get_cellar_out_data(db_conn: MariaDB, params: dict[str, Any], where: str | None = None
-                              ) -> list[CellarOutModel]:
+def get_cellar_out_data(db_conn: MariaDB, params: dict[str, Any] | None = None, where: str | None = None
+                        ) -> list[CellarOutModel.schema_json()]:
     query = ("SELECT w.name AS name, w.vintage AS vintage, "
              "       c.storage_unit AS storage_unit, c.quantity AS quantity,"
              "       c.bottle_size_cl AS bottle_size_cl,"

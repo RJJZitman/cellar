@@ -1,3 +1,5 @@
+from typing import List
+
 import pytest
 
 from fastapi import HTTPException
@@ -5,7 +7,7 @@ from polyfactory.pytest_plugin import register_fixture
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from api.routers import cellar_funcs
-from api.models import GeographicInfoModel, OwnerModel, RatingModel
+from api.models import GeographicInfoModel, OwnerModel, RatingModel, CellarOutModel
 
 
 @register_fixture
@@ -322,3 +324,28 @@ async def test_add_rating_to_db(test_app, cellar_all_user_data, db_monkeypatch,
     assert len(db_test_conn.execute_query_select(query=query, params=params, get_fields=True))
 
 
+@pytest.mark.asyncio
+async def test_get_cellar_out_data(test_app, token_new_user, cellar_all_user_data, new_storage_unit,
+                                   fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
+    db_test_conn = db_monkeypatch
+    user_data = cellar_all_user_data
+    token = token_new_user(data=user_data)
+    storage_unit_data = fake_storage_unit_x()
+    post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
+
+    # add bottle
+    resp, bottle_info = bottle_cellar_fixture(token=token, add=True, quantity=6, storage_unit=get_resp[-1]['id'])
+
+    # assert outputs follow CellarOutModel schema for call without where conditions and params
+    assert all(CellarOutModel(**record) for record in cellar_funcs.get_cellar_out_data(db_conn=db_test_conn))
+
+    # assert outputs follow CellarOutModel schema for call without where conditions but with params
+    assert all(CellarOutModel(**record) for record in cellar_funcs.get_cellar_out_data(db_conn=db_test_conn,
+                                                                                       params={"test": 0}))
+
+    # assert outputs follow CellarOutModel schema for call with where conditions and params
+    assert all(CellarOutModel(**record)
+               for record in cellar_funcs.get_cellar_out_data(db_conn=db_test_conn,
+                                                              where="WHERE c.owner_id = %(user_id)s",
+                                                              params={"user_id": user_data['id']}
+                                                              ))
