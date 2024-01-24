@@ -223,6 +223,7 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                 result = [{col: value for col, value in zip(cols, row)} for row in result]
 
             return result
+
         def _single_query(self, query: str, params: dict[str, Any] | list | tuple | None = None):
             if query == "use cellar" or query == "drop schema cellar":
                 return
