@@ -65,7 +65,7 @@ async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 @router.post("/wine_in_cellar/add", dependencies=[Security(get_current_active_user)])
 async def add_wine_to_cellar(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                              current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
-                             wine_data: CellarInModel):
+                             wine_data: CellarInModel) -> str:
     """
     Adds bottles to your cellar. Make sure to provide the correct storage unit ID. You can check what storages you can
     add wines to from the '/storages/get' endpoint.
