@@ -65,6 +65,7 @@ def test_add_wine_to_cellar_no_storage(test_app, token_new_user, cellar_all_user
     user_data = cellar_all_user_data
     token = token_new_user(data=user_data)
     wine_data = cellar_in_model_factory.build().dict()
+    wine_data['storage_unit'] = 10**9
 
     response = test_app.post(url='/cellar/wine_in_cellar/add',
                              data=json.dumps(wine_data, default=str),

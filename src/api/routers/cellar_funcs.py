@@ -65,11 +65,11 @@ async def verify_wine_in_db(db_conn: MariaDB, name: str, vintage: int) -> bool:
 
 
 async def add_wine_to_db(db_conn: MariaDB, wine_info: WinesModel):
-    db_conn.execute_query(query="INSERT INTO cellar.wines (name, vintage, grapes, type, drink_from, drink_before, "
-                                "                          alcohol_vol_perc, geographic_info, quality_signature) "
-                                "VALUES "
-                                "(%(name)s, %(vintage)s, %(grapes)s, %(type)s, %(drink_from)s, %(drink_before)s, "
-                                "%(alcohol_vol_perc)s, %(geographic_info)s, %(quality_signature)s)",
+    db_conn.execute_query("INSERT INTO cellar.wines (name, vintage, grapes, type, drink_from, drink_before, "
+                          "                          alcohol_vol_perc, geographic_info, quality_signature) "
+                          "VALUES "
+                          "(%(name)s, %(vintage)s, %(grapes)s, %(type)s, %(drink_from)s, %(drink_before)s, "
+                          "%(alcohol_vol_perc)s, %(geographic_info)s, %(quality_signature)s)",
                           params={"name": wine_info.name, "vintage": wine_info.vintage, "grapes": wine_info.grapes,
                                   "type": wine_info.type, "drink_from": wine_info.drink_from,
                                   "drink_before": wine_info.drink_before,
@@ -117,13 +117,11 @@ async def update_quantity_in_cellar(db_conn: MariaDB, wine_id: int, bottle_data:
                         "AND bottle_size_cl = %(bottle_size_cl)s")
     try:
         # Update the quantity by adding or subtracting the desired value
-        db_conn.execute_query(query=f"UPDATE cellar.cellar "
-                                    f"SET quantity = quantity {quantity_operator} %(quantity)s "
-                                    f"WHERE {query_conditions}",
+        db_conn.execute_query(f"UPDATE cellar.cellar SET quantity = quantity {quantity_operator} %(quantity)s "
+                              f"WHERE {query_conditions}",
                               params=params)
         # Remove record matching the bottle if quantity is brought back to zero
-        db_conn.execute_query(query=f"DELETE FROM cellar.cellar "
-                                    f"WHERE quantity = 0 AND {query_conditions}",
+        db_conn.execute_query(f"DELETE FROM cellar.cellar WHERE quantity = 0 AND {query_conditions}",
                               params=params)
 
     except DataError:
@@ -141,10 +139,10 @@ async def add_bottle_to_cellar(db_conn: MariaDB, wine_id: int, owner_id: int, wi
         await update_quantity_in_cellar(db_conn=db_conn, wine_id=wine_id, bottle_data=wine_data, add=True)
     else:
         # Insert the data as a new entry to the DB
-        db_conn.execute_query(query="INSERT INTO cellar.cellar (wine_id, storage_unit, owner_id, bottle_size_cl, "
-                                    "                           quantity, drink_from, drink_before) "
-                                    "VALUES (%(wine_id)s, %(storage_unit)s, %(owner_id)s, %(bottle_size_cl)s, "
-                                    "        %(quantity)s, %(drink_from)s, %(drink_before)s)",
+        db_conn.execute_query("INSERT INTO cellar.cellar (wine_id, storage_unit, owner_id, bottle_size_cl, "
+                              "                           quantity, drink_from, drink_before) "
+                              "VALUES (%(wine_id)s, %(storage_unit)s, %(owner_id)s, %(bottle_size_cl)s, "
+                              "        %(quantity)s, %(drink_from)s, %(drink_before)s)",
                               params={"wine_id": wine_id, "storage_unit": wine_data.storage_unit, "owner_id": owner_id,
                                       "bottle_size_cl": wine_data.bottle_size_cl, "quantity": wine_data.quantity,
                                       "drink_from": wine_data.wine_info.drink_from,
@@ -171,8 +169,8 @@ async def rating_in_db(db_conn: MariaDB, rating_id: int, user_id: int) -> bool:
 
 
 async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating: RatingModel):
-    db_conn.execute_query(query="INSERT INTO cellar.ratings (rater_id, wine_id, rating, drinking_date, comments) "
-                                "VALUES (%(rater_id)s, %(wine_id)s, %(rating)s, %(drinking_date)s, %(comments)s)",
+    db_conn.execute_query("INSERT INTO cellar.ratings (rater_id, wine_id, rating, drinking_date, comments) "
+                          "VALUES (%(rater_id)s, %(wine_id)s, %(rating)s, %(drinking_date)s, %(comments)s)",
                           params={"rater_id": user_id, "wine_id": wine_id, "rating": rating.rating,
                                   "drinking_date": rating.drinking_date, "comments": rating.comments})
 

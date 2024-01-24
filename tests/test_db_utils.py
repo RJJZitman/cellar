@@ -98,26 +98,26 @@ class TestMariaDB:
     def test_execute_query(self):
         with db_utils.MariaDB(**self.basic_init) as db:
             with pytest.raises(Exception) as e_info:
-                db.execute_query(query="exception")
+                db.execute_query("exception")
             assert str(e_info.value) == "MOCK EXCEPTION CURSOR EXECUTE"
 
     def test_execute_queries(self):
         with db_utils.MariaDB(**self.basic_init) as db:
-            db.execute_queries(queries="hello;bye;")
+            db.execute_query(["hello", "bye"])
 
     def test_execute_queries_params(self):
         with db_utils.MariaDB(**self.basic_init) as db:
-            db.execute_queries(queries="hello;bye;", params=[{"a": 1}, {"b": 2}])
+            db.execute_query(["hello", "bye"], params=[{"a": 1}, {"b": 2}])
 
     def test_execute_query_select_no_fields(self):
         with db_utils.MariaDB(**self.basic_init) as db:
-            result = db.execute_query_select(query="hello;bye;", get_fields=False)
+            result = db.execute_query_select(query="select test query", get_fields=False)
 
         assert result == [(1, 2), (3, 4)]
 
     def test_execute_query_select_with_fields(self):
         with db_utils.MariaDB(**self.basic_init) as db:
-            result = db.execute_query_select(query="hello;bye;", get_fields=True)
+            result = db.execute_query_select(query="select test query", get_fields=True)
 
         assert result == [{"a": 1, "b": 2}, {"a": 3, "b": 4}]
 
@@ -128,4 +128,4 @@ class TestMariaDB:
         file_path.write_text("hello;bey;")
 
         with db_utils.MariaDB(**self.basic_init) as db:
-            db.execute_sql_file(file_path=str(file_path), multi=multi)
+            db.execute_sql_file(file_path=str(file_path))#, multi=multi)

@@ -27,8 +27,8 @@ async def post_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     Add a storage unit to the DB.
     Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
-    db_conn.execute_query(query="INSERT INTO cellar.storages (owner_id, location, description) "
-                                "VALUES (%(owner_id)s, %(location)s, %(description)s)",
+    db_conn.execute_query(("INSERT INTO cellar.storages (owner_id, location, description) "
+                           "VALUES (%(owner_id)s, %(location)s, %(description)s)"),
                           params={"owner_id": current_user.id, "location": storage_data.location,
                                   "description": storage_data.description})
 
@@ -53,10 +53,10 @@ async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     # Remove the storage unit from DB if it is empty.
     # Note that `verify_empty_storage_unit` raises and error if the storage unit is not empty
     if await verify_empty_storage_unit(db_conn=db_conn, storage_id=storage_id[0]):
-        db_conn.execute_query(query="DELETE FROM cellar.storages "
-                                    "WHERE location = %(location)s "
-                                    "  AND description = %(description)s "
-                                    "  AND owner_id = %(owner_id)s",
+        db_conn.execute_query(("DELETE FROM cellar.storages "
+                               "WHERE location = %(location)s "
+                               "  AND description = %(description)s "
+                               "  AND owner_id = %(owner_id)s"),
                               params={"location": location, "description": description, "owner_id": current_user.id})
 
     return "Storage unit has successfully been removed from the DB"
@@ -140,8 +140,7 @@ async def move_bottle_to_other_storage(db_conn: Annotated[MariaDB, Depends(DB_CO
     Move a bottle from one storage unit to another.
     """
     if verify_storage_exists_for_user(db_conn=db_conn, storage_id=new_storage_unit, user_id=current_user.id):
-        db_conn.execute_query(query=("UPDATE cellar.cellar "
-                                     "SET storage_unit = %(storage_unit)s WHERE id = %(cellar_id)s"),
+        db_conn.execute_query("UPDATE cellar.cellar SET storage_unit = %(storage_unit)s WHERE id = %(cellar_id)s",
                               params={"storage_unit": new_storage_unit, "cellar_id": cellar_id})
         return f"Bottle has successfully been transferred to storage unit {new_storage_unit}"
     else:

@@ -223,8 +223,7 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                 result = [{col: value for col, value in zip(cols, row)} for row in result]
 
             return result
-
-        def execute_query(self, query: str, params: dict[str, Any] | list | tuple | None = None):
+        def _single_query(self, query: str, params: dict[str, Any] | list | tuple | None = None):
             if query == "use cellar" or query == "drop schema cellar":
                 return
             if params is None:
@@ -241,17 +240,29 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
             except IntegrityError:
                 raise DataError()
 
+        def execute_query(self, query: str | list, params: dict[str, Any] | list | tuple | None = None):
+            if isinstance(query, str):
+                self._single_query(query=query, params=params)
+            else:
+                # note that the `query` arg is a list of multiple query strings
+                if params is None:
+                    params = len(query) * [None]
+                if len(params) != len(query):
+                    raise ValueError("Number of parameters does not match the number of queries.")
+
+                for q, param in zip(query, params):
+                    self._single_query(query=q, params=param)
+
         def execute_sql_file(self, file_path: str, params: Any | None = None, multi: bool = False) -> None:
             with open(file=file_path, mode='r') as sql_file:
-                if multi:
-                    self.execute_queries(queries=sql_file.read(), params=params)
-                else:
-                    self.execute_query(query=sql_file.read(), params=params)
+                queries = sql_file.read().split(';')[:-1]
 
-        def execute_queries(self, queries: str, params: Any | None) -> None:
-            for query in queries.split(';')[:-1]:
-                print(query)
-                self.execute_query(query=f"{query};", params=params)
+            if len(queries) > 1:
+                self.execute_query(queries, params=params)
+            elif len(queries) == 1:
+                self.execute_query(queries[0], params=params)
+            else:
+                raise ValueError("No queries found in the SQL file.")
 
         def _initiate_connection(self):
             pass

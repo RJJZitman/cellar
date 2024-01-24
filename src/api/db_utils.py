@@ -1,4 +1,5 @@
 from typing import Optional, Any
+from functools import singledispatchmethod
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
@@ -70,29 +71,58 @@ class MariaDB:
         engine = create_engine(self.connection_string)
         return engine
 
-    def execute_queries(self, queries: str, params: list[Any | None] | None = None) -> None:
-        """
-        Executes multiple queries separated by a ";".
-
-        :param queries: The queries formatted as string
-        :param params: Optional extra query params
-        """
-        if params:
-            for query, param in zip(queries.split(';')[:-1], params):
-                self.execute_query(query=f"{query};", params=param)
-        else:
-            for query in queries.split(';')[:-1]:
-                self.execute_query(query=f"{query};")
-
+    @singledispatchmethod
     def execute_query(self, query: str, params: dict[str, Any] | list | tuple | None = None) -> None:
+
         """
         Executes a single query. Uses a transaction to commit the executed query automatically.
+        Make sure to provide the query as the first positional argument without a keyword.
 
         :param query: The query that is executed
         :param params: Optional extra query params
         """
         with self.connection.begin() as trans:
             self.cursor.execute(operation=query, params=params)
+
+    @execute_query.register
+    def _(self, queries: list, params: dict[str, Any] | list | tuple | None = None) -> None:
+        """
+        Executes multiple queries provided as a list of query strings
+
+        :param queries: The list of queries to be executed
+        :param params: Optional extra query params
+        """
+        if params is None:
+            params = len(queries) * [None]
+        if len(params) != len(queries):
+            raise ValueError("Number of parameters does not match the number of queries.")
+
+        for query, param in zip(queries, params):
+            self.execute_query(query, params=param)
+
+    # def execute_queries(self, queries: str, params: list[Any | None] | None = None) -> None:
+    #     """
+    #     Executes multiple queries separated by a ";".
+    #
+    #     :param queries: The queries formatted as string
+    #     :param params: Optional extra query params
+    #     """
+    #     if params:
+    #         for query, param in zip(queries.split(';')[:-1], params):
+    #             self.execute_query(query=f"{query};", params=param)
+    #     else:
+    #         for query in queries.split(';')[:-1]:
+    #             self.execute_query(query=f"{query};")
+    #
+    # def execute_query(self, query: str, params: dict[str, Any] | list | tuple | None = None) -> None:
+    #     """
+    #     Executes a single query. Uses a transaction to commit the executed query automatically.
+    #
+    #     :param query: The query that is executed
+    #     :param params: Optional extra query params
+    #     """
+    #     with self.connection.begin() as trans:
+    #         self.cursor.execute(operation=query, params=params)
 
     def execute_query_select(self, query: str, params: dict[str, Any] | list | tuple | None = None,
                              get_fields: bool = False) -> Any:
@@ -111,17 +141,19 @@ class MariaDB:
             result = [{col: value for col, value in zip(cols, row)} for row in result]
         return result
 
-    def execute_sql_file(self, file_path: str, params: dict[str, Any] | list | tuple | None = None,
-                         multi: bool = False) -> None:
+    def execute_sql_file(self, file_path: str, params: dict[str, Any] | list | tuple | None = None) -> None:
         """
         Reads a SQL string from a file and executes the query. Note that this method only support non-select queries.
 
         :param file_path: path to where the query-containing file lives
         :param params: Optional extra query params
-        :param multi: Denotes if the file contains multiple queries or a single one
         """
         with open(file=file_path, mode='r') as sql_file:
-            if multi:
-                self.execute_queries(queries=sql_file.read(), params=params)
-            else:
-                self.execute_query(query=sql_file.read(), params=params)
+            queries = sql_file.read().split(';')[:-1]
+
+        if len(queries) > 1:
+            self.execute_query(queries, params=params)
+        elif len(queries) == 1:
+            self.execute_query(queries[0], params=params)
+        else:
+            raise ValueError("No queries found in the SQL file.")
