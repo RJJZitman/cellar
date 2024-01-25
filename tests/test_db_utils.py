@@ -109,6 +109,11 @@ class TestMariaDB:
         with db_utils.MariaDB(**self.basic_init) as db:
             db.execute_query(["hello", "bye"], params=[{"a": 1}, {"b": 2}])
 
+    def test_execute_queries_params_non_matching_nb_params(self):
+        with pytest.raises(ValueError):
+            with db_utils.MariaDB(**self.basic_init) as db:
+                db.execute_query(["hello", "bye"], params=[{"a": 1}, {"b": 2}, {"c": 3}])
+
     def test_execute_query_select_no_fields(self):
         with db_utils.MariaDB(**self.basic_init) as db:
             result = db.execute_query_select(query="select test query", get_fields=False)
@@ -121,11 +126,27 @@ class TestMariaDB:
 
         assert result == [{"a": 1, "b": 2}, {"a": 3, "b": 4}]
 
-    @pytest.mark.parametrize("multi", [True, False])
-    def test_execute_sql_file(self, tmp_path, multi):
+    def test_execute_sql_file_multiple_queries(self, tmp_path):
         file_path = tmp_path / "q.sql"
         file_path.touch()
         file_path.write_text("hello;bey;")
 
         with db_utils.MariaDB(**self.basic_init) as db:
-            db.execute_sql_file(file_path=str(file_path))#, multi=multi)
+            db.execute_sql_file(file_path=str(file_path))
+
+    def test_execute_sql_file_single_query(self, tmp_path):
+        file_path = tmp_path / "q.sql"
+        file_path.touch()
+        file_path.write_text("hello;")
+
+        with db_utils.MariaDB(**self.basic_init) as db:
+            db.execute_sql_file(file_path=str(file_path))
+
+    def test_execute_sql_file_no_query(self, tmp_path):
+        file_path = tmp_path / "q.sql"
+        file_path.touch()
+        file_path.write_text("hello")
+
+        with pytest.raises(ValueError):
+            with db_utils.MariaDB(**self.basic_init) as db:
+                db.execute_sql_file(file_path=str(file_path))

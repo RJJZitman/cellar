@@ -100,30 +100,6 @@ class MariaDB:
         for query, param in zip(queries, params):
             self.execute_query(query, params=param)
 
-    # def execute_queries(self, queries: str, params: list[Any | None] | None = None) -> None:
-    #     """
-    #     Executes multiple queries separated by a ";".
-    #
-    #     :param queries: The queries formatted as string
-    #     :param params: Optional extra query params
-    #     """
-    #     if params:
-    #         for query, param in zip(queries.split(';')[:-1], params):
-    #             self.execute_query(query=f"{query};", params=param)
-    #     else:
-    #         for query in queries.split(';')[:-1]:
-    #             self.execute_query(query=f"{query};")
-    #
-    # def execute_query(self, query: str, params: dict[str, Any] | list | tuple | None = None) -> None:
-    #     """
-    #     Executes a single query. Uses a transaction to commit the executed query automatically.
-    #
-    #     :param query: The query that is executed
-    #     :param params: Optional extra query params
-    #     """
-    #     with self.connection.begin() as trans:
-    #         self.cursor.execute(operation=query, params=params)
-
     def execute_query_select(self, query: str, params: dict[str, Any] | list | tuple | None = None,
                              get_fields: bool = False) -> Any:
         """

@@ -52,6 +52,7 @@ class CellarMinimalModel(BaseModel):
 
 
 class CellarOutModel(BaseModel):
+    cellar_id: int = Field(ge=0)
     name: str = Field(max_length=200)
     vintage: int = Field(gt=0, lt=3000, default=CURRENT_YEAR)
     storage_unit: int = Field(ge=0)

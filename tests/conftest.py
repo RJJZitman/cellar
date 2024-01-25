@@ -196,6 +196,9 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
                 query = self._add_auto_increment_on_insert(query=query, table='wines')
             elif "INSERT INTO ratings (rater_id" in query:
                 query = self._add_auto_increment_on_insert(query=query, table='ratings')
+            elif 'INSERT INTO cellar (wine_id' in query:
+                query = self._add_auto_increment_on_insert(query=query, table='cellar')
+
             return query
 
         def _show_query_patch(self, query: str):

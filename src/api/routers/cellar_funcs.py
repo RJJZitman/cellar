@@ -31,8 +31,7 @@ async def verify_storage_exists_for_user(db_conn: MariaDB, storage_id: int, user
     info = db_conn.execute_query_select(query="SELECT location, description "
                                               "FROM cellar.storages "
                                               "WHERE id = %(storage_id)s AND owner_id = %(user_id)s",
-                                        params={"storage_id": storage_id, "user_id": user_id},
-                                        get_fields=True)
+                                        params={"storage_id": storage_id, "user_id": user_id})
     if len(info):
         return True
     else:
@@ -178,6 +177,7 @@ async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating:
 def get_cellar_out_data(db_conn: MariaDB, params: dict[str, Any] | None = None, where: str | None = None
                         ) -> list[CellarOutModel.schema_json()]:
     query = ("SELECT w.name AS name, w.vintage AS vintage, "
+             "       c.id AS cellar_id, "
              "       c.storage_unit AS storage_unit, c.quantity AS quantity,"
              "       c.bottle_size_cl AS bottle_size_cl,"
              "       c.wine_id AS wine_id, c.owner_id AS owner_id,"

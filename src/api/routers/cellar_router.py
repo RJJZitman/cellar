@@ -139,7 +139,7 @@ async def move_bottle_to_other_storage(db_conn: Annotated[MariaDB, Depends(DB_CO
     """
     Move a bottle from one storage unit to another.
     """
-    if verify_storage_exists_for_user(db_conn=db_conn, storage_id=new_storage_unit, user_id=current_user.id):
+    if await verify_storage_exists_for_user(db_conn=db_conn, storage_id=new_storage_unit, user_id=current_user.id):
         db_conn.execute_query("UPDATE cellar.cellar SET storage_unit = %(storage_unit)s WHERE id = %(cellar_id)s",
                               params={"storage_unit": new_storage_unit, "cellar_id": cellar_id})
         return f"Bottle has successfully been transferred to storage unit {new_storage_unit}"
