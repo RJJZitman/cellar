@@ -42,7 +42,7 @@ async def get_storage_units(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 @router.get("/wine_in_cellar/get_wine_ratings", dependencies=[Security(get_current_active_user)])
 async def get_wine_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                           current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
-                          wine_id: int | None = None,
+                          wine_id: int,
                           only_your_ratings: bool = True) -> list[RatingInDbModel]:
     """
     Retrieves ratings for a specific wine/bottle. Make sure to set the 'only_your_ratings' to True if you only want

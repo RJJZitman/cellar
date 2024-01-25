@@ -296,13 +296,28 @@ async def test_rating_in_db_not(test_app, cellar_all_user_data, db_monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_rating_in_db(test_app, cellar_all_user_data, db_monkeypatch):
+async def test_rating_in_db(test_app, token_new_user, cellar_all_user_data, db_monkeypatch, new_storage_unit,
+                            rating_model_factory: RatingModelFactory, fake_storage_unit_x, bottle_cellar_fixture):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    rating_id = 10**4
-    db_test_conn.execute_query(query="INSERT INTO cellar.ratings (id, rater_id) Values (%(id)s, %(rater_id)s)",
-                               params={"id": rating_id, "rater_id": user_data['id']})
-    assert await cellar_funcs.rating_in_db(db_conn=db_test_conn, rating_id=rating_id, user_id=user_data['id'])
+    token = token_new_user(data=user_data)
+    rating_data = rating_model_factory.build()
+    storage_unit_data = fake_storage_unit_x()
+    post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
+    resp, bottle_info = bottle_cellar_fixture(token=token, add=True, quantity=6, storage_unit=get_resp[-1]['id'])
+
+    wine_id = await cellar_funcs.get_bottle_id(db_conn=db_test_conn, name=bottle_info.wine_info.name,
+                                               vintage=bottle_info.wine_info.vintage)
+
+    await cellar_funcs.add_rating_to_db(db_conn=db_test_conn, user_id=user_data['id'], rating=rating_data,
+                                        wine_id=wine_id)
+    rating = db_test_conn.execute_query_select(query="SELECT id FROM cellar.ratings "
+                                                     "WHERE rater_id = %(rater_id)s AND wine_id = %(wine_id)s "
+                                                     "AND rating = %(rating)s",
+                                               params={"rater_id": user_data['id'], "wine_id": wine_id,
+                                                       "rating": rating_data.rating},
+                                               get_fields=True)
+    assert await cellar_funcs.rating_in_db(db_conn=db_test_conn, rating_id=rating[0]['id'], user_id=user_data['id'])
 
 
 @pytest.mark.asyncio
