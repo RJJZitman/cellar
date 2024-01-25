@@ -10,7 +10,7 @@ from ..db_utils import MariaDB
 from ..constants import ACCESS_TOKEN_EXPIRATION_MIN, SCOPES, DB_CONN
 from ..authentication import (authenticate_user, create_access_token, verify_scopes, get_password_hash,
                               get_current_active_user, get_user)
-from ..models import Token, OwnerDbModel
+from ..models import Token, UpdateOwnerModel, OwnerModel, NewOwnerModel
 
 
 SCOPES_ENUM = Enum('ScopesType', ((s, s) for s in SCOPES.keys()), type=str)
@@ -69,9 +69,16 @@ async def get_extended_access_token(user_db: Annotated[MariaDB, Depends(DB_CONN)
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
+@router.get('/get_users', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
+async def get_users(user_db: Annotated[MariaDB, Depends(DB_CONN)]) -> list[OwnerModel]:
+    return user_db.execute_query_select(query="SELECT id, name, username, scopes, is_admin, enabled "
+                                              "FROM cellar.owners",
+                                        get_fields=True)
+
+
 @router.post('/add', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
 async def add_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
-                   owner_data: OwnerDbModel) -> str:
+                   owner_data: NewOwnerModel) -> str:
     """
     ADMIN ONLY ENDPOINT
     Add new wine/beer owner to the DB.
@@ -82,11 +89,65 @@ async def add_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
                                         params={"username": owner_data.username})
     if user:
         raise HTTPException(status_code=400, detail=f"A user with username {owner_data.username} already exists")
-    user_db.execute_query(query="INSERT INTO cellar.owners (id, name, username, password, scopes, is_admin, enabled) "
-                                "VALUES (%(id)s, %(name)s, %(username)s, %(password)s, %(scopes)s, %(is_admin)s, "
-                                "        %(enabled)s)",
-                          params={"id": owner_data.id, "name": owner_data.name, "username": owner_data.username,
+    user_db.execute_query("INSERT INTO cellar.owners (name, username, password, scopes, is_admin, enabled) "
+                          "VALUES (%(name)s, %(username)s, %(password)s, %(scopes)s, %(is_admin)s, "
+                          "        %(enabled)s)",
+                          params={"name": owner_data.name, "username": owner_data.username,
                                   "password": get_password_hash(password=owner_data.password),
                                   "scopes": owner_data.scopes, "is_admin": owner_data.is_admin,
                                   "enabled": owner_data.enabled})
     return f"User with username {owner_data.username} has successfully been added to the DB"
+
+
+@router.delete('/delete', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
+async def delete_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
+                      delete_username: str) -> str:
+    """
+    ADMIN ONLY ENDPOINT
+    Delete existing wine/beer owner to the DB.
+    Required scope(s): USERS:READ, USERS:WRITE
+    """
+    # validate if user exists based on the unique username
+    user = user_db.execute_query_select(query="SELECT * FROM cellar.owners WHERE username = %(username)s",
+                                        params={"username": delete_username})
+    if not user:
+        raise HTTPException(status_code=400, detail=f"No users with username {delete_username} exist")
+    user_db.execute_query("DELETE FROM cellar.owners WHERE username = %(username)s",
+                          params={"username": delete_username})
+    return f"User with username {delete_username} has successfully been removed from the DB"
+
+
+@router.patch('/update', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
+async def update_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
+                      current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
+                      new_data: UpdateOwnerModel,
+                      current_username: str) -> str:
+    """
+    ADMIN ONLY ENDPOINT
+    Add new wine/beer owner to the DB.
+    Required scope(s): USERS:READ, USERS:WRITE
+    """
+    # validate whether the new username exists differs from the current username and if so, if it exists in the DB
+    new_user = user_db.execute_query_select(query="SELECT * FROM cellar.owners WHERE username = %(username)s",
+                                            params={"username": new_data.username},
+                                            get_fields=True)
+    if len(new_user) and new_user[0]['username'] != current_username:
+        raise HTTPException(status_code=400, detail=f"Users with username {new_user[0]['username']} exist. Please "
+                                                    f"provide a unique new username.")
+
+    # find updated values and construct query string
+    new_user_data = get_user(username=current_username, user_db=user_db).dict()
+    current_user_data = current_user.dict()
+    params = {}
+    new_vals, new_val_keys = '', ''
+    for key in set(new_user_data.keys()) | set(current_user_data.keys()):
+        if new_user_data.get(key) != current_user_data.get(key) and new_user_data.get(key) is not None:
+            new_val_keys += f'{key}, '
+            new_vals += f'{key} = %({key})s AND '
+            params[str(key)] = new_user_data.get(key)
+    new_vals = new_vals[:-4]
+    new_val_keys = new_val_keys[:-2]
+    print(f"UPDATE cellar.owners SET {new_vals}")
+    user_db.execute_query(f"UPDATE cellar.owners SET {new_vals}", params=params)
+
+    return f"User with previous username {current_user.username} has successfully been updated in the DB"
