@@ -47,7 +47,7 @@ async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
     # Verify empty storage unit
-    storage_id = await get_storage_id(db_conn=db_conn, current_user=current_user,
+    storage_id = await get_storage_id(db_conn=db_conn, current_user_id=current_user.id,
                                       location=location, description=description)
 
     # Remove the storage unit from DB if it is empty.

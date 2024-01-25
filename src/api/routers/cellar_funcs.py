@@ -13,13 +13,13 @@ def unpack_geo_info(geographic_info: GeographicInfoModel) -> str:
     return ",\t".join(f"{k}: {v}" for k, v in geographic_info.dict().items())
 
 
-async def get_storage_id(db_conn: MariaDB, current_user: OwnerModel, location: str, description: str) -> int:
+async def get_storage_id(db_conn: MariaDB, current_user_id: int, location: str, description: str) -> int:
     storage_id = db_conn.execute_query_select(query="SELECT id FROM cellar.storages "
                                                     "WHERE location = %(location)s "
                                                     "  AND description = %(description)s "
                                                     "  AND owner_id = %(owner_id)s",
                                               params={"location": location, "description": description,
-                                                      "owner_id": current_user.id})
+                                                      "owner_id": current_user_id})
     try:
         return storage_id[0]
     except IndexError:

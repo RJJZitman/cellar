@@ -23,7 +23,7 @@ class RatingInDbModelFactory(ModelFactory[RatingInDbModel]):
 @pytest.mark.unit
 def test_post_storage_unit(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_x):
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     # add a storage unit
     response = test_app.post(url='/cellar/storages/add',
@@ -38,7 +38,7 @@ def test_post_storage_unit(test_app, token_new_user, cellar_all_user_data, new_s
 @pytest.mark.unit
 def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data, new_storage_unit, fake_storage_unit_x):
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -51,7 +51,7 @@ def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data, ne
     storages_post = test_app.get(url='/cellar_views/storages/get',
                                  headers={"content-type": "application/json",
                                           "Authorization": f"Bearer {token['access_token']}"})
-    storage_unit_data["owner_id"] = user_data["id"]
+    storage_unit_data["owner_id"] = user_id#user_data["id"]
     storage_unit_data['id'] = get_resp[-1]['id']
 
     assert response.status_code == status.HTTP_200_OK
@@ -63,7 +63,7 @@ def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data, ne
 def test_add_wine_to_cellar_no_storage(test_app, token_new_user, cellar_all_user_data,
                                        cellar_in_model_factory: CellarInModelFactory):
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     wine_data = cellar_in_model_factory.build().dict()
     wine_data['storage_unit'] = 10**9
 
@@ -79,7 +79,7 @@ async def test_add_wine_to_cellar(test_app, token_new_user, cellar_all_user_data
                                   fake_storage_unit_x, cellar_in_model_factory: CellarInModelFactory):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
     wine_data = cellar_in_model_factory.build()
@@ -111,7 +111,7 @@ async def test_add_wine_to_cellar(test_app, token_new_user, cellar_all_user_data
 async def test_add_a_rating_wine_not_exist(test_app, token_new_user, cellar_all_user_data,
                                            rating_in_db_model_factory: RatingInDbModelFactory):
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     rating_data = rating_in_db_model_factory.build()
 
     # assert a rating for a wine that does not exist in the DB cannot be processed
@@ -128,7 +128,7 @@ async def test_add_a_rating(test_app, token_new_user, cellar_all_user_data, new_
                             cellar_in_model_factory: CellarInModelFactory):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
     wine_data = cellar_in_model_factory.build()
@@ -160,7 +160,7 @@ async def test_remove_consumed_from_stock(test_app, token_new_user, cellar_all_u
                                           fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -187,7 +187,7 @@ async def test_remove_consumed_from_stock_rating(test_app, token_new_user, cella
                                                  rating_in_db_model_factory: RatingInDbModelFactory):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
     rating_data = rating_in_db_model_factory.build()
@@ -196,7 +196,7 @@ async def test_remove_consumed_from_stock_rating(test_app, token_new_user, cella
     resp, bottle_info = bottle_cellar_fixture(token=token, add=True, quantity=6, storage_unit=get_resp[-1]['id'])
     wine_id = await cellar_funcs.get_bottle_id(db_conn=db_test_conn, name=bottle_info.wine_info.name,
                                                vintage=bottle_info.wine_info.vintage)
-    # bottle_info.wine_id = wine_id
+
     consumed_bottle_info = {"bottle_data": {"wine_id": wine_id, "storage_unit": bottle_info.storage_unit,
                                             "bottle_size_cl": bottle_info.bottle_size_cl,
                                             "quantity": bottle_info.quantity},
@@ -212,7 +212,7 @@ async def test_remove_consumed_from_stock_rating(test_app, token_new_user, cella
 @pytest.mark.asyncio
 async def test_remove_consumed_unknown_bottle(test_app, token_new_user, cellar_all_user_data):
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     consumed_bottle_info = {"bottle_data": {"wine_id": 109084874, "storage_unit": 5,
                                             "bottle_size_cl": 5,
                                             "quantity": 5},
@@ -227,7 +227,7 @@ async def test_remove_consumed_unknown_bottle(test_app, token_new_user, cellar_a
 @pytest.mark.asyncio
 async def test_move_bottle_to_other_storage(test_app, token_new_user, cellar_all_user_data):
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     response = test_app.patch(url='/cellar/wine_in_cellar/move?cellar_id=2&new_storage_unit=994534599',
                               headers={"content-type": "application/json",
                                        "Authorization": f"Bearer {token['access_token']}"})
@@ -239,7 +239,7 @@ async def test_move_bottle_to_other_storage(test_app, token_new_user, cellar_all
                                             fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
     resp, bottle_info = bottle_cellar_fixture(token=token, add=True, quantity=6, storage_unit=get_resp[-1]['id'])
@@ -260,7 +260,7 @@ async def test_move_bottle_to_other_storage(test_app, token_new_user, cellar_all
 async def test_move_bottle_to_other_storage_no_storage(test_app, token_new_user, cellar_all_user_data, new_storage_unit,
                                                        fake_storage_unit_x, bottle_cellar_fixture):
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
     resp, bottle_info = bottle_cellar_fixture(token=token, add=True, quantity=6, storage_unit=get_resp[-1]['id'])

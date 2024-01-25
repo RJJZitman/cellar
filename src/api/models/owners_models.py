@@ -15,7 +15,7 @@ class NewOwnerModel(BaseModel):
     username: str
     password: str
     scopes: str | None = None
-    is_admin: bool | None = None
+    is_admin: bool | None = Field(default=False)
     enabled: bool | None = None
 
 

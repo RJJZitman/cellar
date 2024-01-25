@@ -1,5 +1,3 @@
-from typing import List
-
 import pytest
 
 from fastapi import HTTPException
@@ -33,11 +31,11 @@ async def test_get_storage_id(test_app, token_new_user, cellar_all_user_data, ne
                               db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
-    storage_id = await cellar_funcs.get_storage_id(db_conn=db_test_conn, current_user=OwnerModel(**user_data),
+    storage_id = await cellar_funcs.get_storage_id(db_conn=db_test_conn, current_user_id=user_id,
                                                    location=storage_unit_data['location'],
                                                    description=storage_unit_data['description'])
     assert storage_id[0] == get_resp[-1]['id']
@@ -45,13 +43,14 @@ async def test_get_storage_id(test_app, token_new_user, cellar_all_user_data, ne
 
 @pytest.mark.asyncio
 async def test_get_storage_id_non_existing(test_app, cellar_all_user_data, new_storage_unit,
-                                           fake_storage_unit_x, db_monkeypatch):
+                                           token_new_user, fake_storage_unit_x, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
 
     with pytest.raises(HTTPException) as exc_info:
-        await cellar_funcs.get_storage_id(db_conn=db_test_conn, current_user=OwnerModel(**user_data),
+        await cellar_funcs.get_storage_id(db_conn=db_test_conn, current_user_id=user_id,
                                           location=storage_unit_data['location'],
                                           description=storage_unit_data['description'])
     assert exc_info.value.status_code == 404
@@ -62,20 +61,21 @@ async def test_verify_storage_exists(test_app, token_new_user, cellar_all_user_d
                                      fake_storage_unit_x, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
     assert await cellar_funcs.verify_storage_exists_for_user(db_conn=db_test_conn, storage_id=get_resp[0]['id'],
-                                                             user_id=user_data['id'])
+                                                             user_id=user_id)
 
 
 @pytest.mark.asyncio
-async def test_verify_storage_exists_non_existing(test_app, cellar_all_user_data, db_monkeypatch):
+async def test_verify_storage_exists_non_existing(test_app, cellar_all_user_data, db_monkeypatch, token_new_user):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
+    token, user_id = token_new_user(data=user_data)
     assert not await cellar_funcs.verify_storage_exists_for_user(db_conn=db_test_conn, storage_id=10**6,
-                                                                 user_id=user_data['id'])
+                                                                 user_id=user_id)
 
 
 @pytest.mark.asyncio
@@ -83,11 +83,11 @@ async def test_verify_empty_storage_unit(test_app, token_new_user, cellar_all_us
                                          fake_storage_unit_x, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
-    assert await cellar_funcs.verify_empty_storage_unit(db_conn=db_test_conn,storage_id=get_resp[-1]['id'])
+    assert await cellar_funcs.verify_empty_storage_unit(db_conn=db_test_conn, storage_id=get_resp[-1]['id'])
 
 
 @pytest.mark.asyncio
@@ -95,7 +95,7 @@ async def test_verify_empty_storage_unit_not_empty(test_app, token_new_user, cel
                                                    fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
     bottle_cellar_fixture(token=token, add=True, quantity=6, storage_unit=get_resp[-1]['id'])
@@ -110,7 +110,7 @@ async def test_verify_wine_in_db(test_app, token_new_user, cellar_all_user_data,
                                  bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -131,7 +131,7 @@ async def test_get_bottle_id(test_app, token_new_user, cellar_all_user_data, new
                              bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -154,7 +154,7 @@ async def test_verify_bottle_exists_in_storage_unit(test_app, token_new_user, ce
                                                     fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -181,7 +181,7 @@ async def test_update_quantity_in_cellar(test_app, token_new_user, cellar_all_us
                                          fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -219,7 +219,7 @@ async def test_update_quantity_in_cellar_not(test_app, token_new_user, cellar_al
                                              fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -242,7 +242,7 @@ async def test_add_bottle_to_cellar(test_app, token_new_user, cellar_all_user_da
                                     fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -252,7 +252,7 @@ async def test_add_bottle_to_cellar(test_app, token_new_user, cellar_all_user_da
     wine_id = await cellar_funcs.get_bottle_id(db_conn=db_test_conn, name=bottle_info.wine_info.name,
                                                vintage=bottle_info.wine_info.vintage)
 
-    await cellar_funcs.add_bottle_to_cellar(db_conn=db_test_conn, wine_id=wine_id, owner_id=user_data['id'],
+    await cellar_funcs.add_bottle_to_cellar(db_conn=db_test_conn, wine_id=wine_id, owner_id=user_id,
                                             wine_data=bottle_info)
     wine_in_cellar_data = db_test_conn.execute_query_select(query=("SELECT * FROM cellar.cellar "
                                                                    "WHERE wine_id = %(wine_id)s "
@@ -277,7 +277,7 @@ async def test_wine_in_db(test_app, token_new_user, cellar_all_user_data, new_st
                           fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -289,10 +289,11 @@ async def test_wine_in_db(test_app, token_new_user, cellar_all_user_data, new_st
 
 
 @pytest.mark.asyncio
-async def test_rating_in_db_not(test_app, cellar_all_user_data, db_monkeypatch):
+async def test_rating_in_db_not(test_app, cellar_all_user_data, db_monkeypatch, token_new_user):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    assert not await cellar_funcs.rating_in_db(db_conn=db_test_conn, rating_id=9999, user_id=user_data['id'])
+    token, user_id = token_new_user(data=user_data)
+    assert not await cellar_funcs.rating_in_db(db_conn=db_test_conn, rating_id=9999, user_id=user_id)
 
 
 @pytest.mark.asyncio
@@ -300,7 +301,7 @@ async def test_rating_in_db(test_app, token_new_user, cellar_all_user_data, db_m
                             rating_model_factory: RatingModelFactory, fake_storage_unit_x, bottle_cellar_fixture):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     rating_data = rating_model_factory.build()
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
@@ -309,22 +310,23 @@ async def test_rating_in_db(test_app, token_new_user, cellar_all_user_data, db_m
     wine_id = await cellar_funcs.get_bottle_id(db_conn=db_test_conn, name=bottle_info.wine_info.name,
                                                vintage=bottle_info.wine_info.vintage)
 
-    await cellar_funcs.add_rating_to_db(db_conn=db_test_conn, user_id=user_data['id'], rating=rating_data,
+    await cellar_funcs.add_rating_to_db(db_conn=db_test_conn, user_id=user_id, rating=rating_data,
                                         wine_id=wine_id)
     rating = db_test_conn.execute_query_select(query="SELECT id FROM cellar.ratings "
                                                      "WHERE rater_id = %(rater_id)s AND wine_id = %(wine_id)s "
                                                      "AND rating = %(rating)s",
-                                               params={"rater_id": user_data['id'], "wine_id": wine_id,
+                                               params={"rater_id": user_id, "wine_id": wine_id,
                                                        "rating": rating_data.rating},
                                                get_fields=True)
-    assert await cellar_funcs.rating_in_db(db_conn=db_test_conn, rating_id=rating[0]['id'], user_id=user_data['id'])
+    assert await cellar_funcs.rating_in_db(db_conn=db_test_conn, rating_id=rating[0]['id'], user_id=user_id)
 
 
 @pytest.mark.asyncio
 async def test_add_rating_to_db(test_app, cellar_all_user_data, db_monkeypatch,
-                                rating_model_factory: RatingModelFactory):
+                                token_new_user, rating_model_factory: RatingModelFactory):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
+    token, user_id = token_new_user(data=user_data)
     rating_data = rating_model_factory.build()
     query = ("SELECT * FROM cellar.ratings "
              "WHERE rating = %(rating)s "
@@ -335,7 +337,7 @@ async def test_add_rating_to_db(test_app, cellar_all_user_data, db_monkeypatch,
     assert not len(db_test_conn.execute_query_select(query=query, params=params, get_fields=True))
 
     # add and assert rating in db
-    await cellar_funcs.add_rating_to_db(db_conn=db_test_conn, user_id=user_data['id'], wine_id=0, rating=rating_data)
+    await cellar_funcs.add_rating_to_db(db_conn=db_test_conn, user_id=user_id, wine_id=0, rating=rating_data)
     assert len(db_test_conn.execute_query_select(query=query, params=params, get_fields=True))
 
 
@@ -344,7 +346,7 @@ async def test_get_cellar_out_data(test_app, token_new_user, cellar_all_user_dat
                                    fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
     db_test_conn = db_monkeypatch
     user_data = cellar_all_user_data
-    token = token_new_user(data=user_data)
+    token, user_id = token_new_user(data=user_data)
     storage_unit_data = fake_storage_unit_x()
     post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
 
@@ -362,5 +364,5 @@ async def test_get_cellar_out_data(test_app, token_new_user, cellar_all_user_dat
     assert all(CellarOutModel(**record)
                for record in cellar_funcs.get_cellar_out_data(db_conn=db_test_conn,
                                                               where="WHERE c.owner_id = %(user_id)s",
-                                                              params={"user_id": user_data['id']}
+                                                              params={"user_id": user_id}
                                                               ))

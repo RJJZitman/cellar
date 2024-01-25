@@ -1,4 +1,5 @@
 import json
+import copy
 
 from typing import Any
 
@@ -67,6 +68,16 @@ def new_user(test_app):
                       data=json.dumps(data),
                       headers={"content-type": "application/json",
                                "Authorization": f"Bearer {token['access_token']}"})
+        users = test_app.get(url='/users/get_users',
+                             headers={"content-type": "application/json",
+                                      "Authorization": f"Bearer {token['access_token']}"}).json()
+        data_copy = copy.deepcopy(data)
+        del data_copy['password']
+        user_id = [user['id'] for user in users if all(user[key] == value for key, value in data_copy.items())][0]
+        print(f"FIXTURE_DATA: {data}")
+        print(f"USER_DATA: {users}")
+        print(f"USER_ID: {user_id}")
+        return user_id
     return set_user_scopes
 
 
@@ -74,12 +85,12 @@ def new_user(test_app):
 def token_new_user(test_app, new_user, token_admin):
     def get_token(data: dict):
         token = token_admin
-        new_user(data=data, token=token)
+        user_id = new_user(data=data, token=token)
         response = test_app.post(url='/users/token', data={'username': data['username'],
                                                            'password': data['password'],
                                                            'scope': data['scopes']},
                                  headers={"content-type": "application/x-www-form-urlencoded"})
-        return response.json()
+        return response.json(), user_id
 
     return get_token
 
@@ -282,25 +293,25 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
 
 @pytest.fixture()
 def scopeless_user_data():
-    return {'id': 2, 'name': 'scopeless_user', 'username': 'scopeless_user', 'password': 'scopeless_user', 'scopes': '',
+    return {'name': 'scopeless_user', 'username': 'scopeless_user', 'password': 'scopeless_user', 'scopes': '',
             'is_admin': 0, 'enabled': 1}
 
 
 @pytest.fixture()
 def cellar_read_user_data():
-    return {'id': 3, 'name': 'cellar_read', 'username': 'cellar_read', 'password': 'cellar_read',
+    return {'name': 'cellar_read', 'username': 'cellar_read', 'password': 'cellar_read',
             'scopes': 'CELLAR:READ', 'is_admin': 0, 'enabled': 1}
 
 
 @pytest.fixture()
 def cellar_all_user_data():
-    return {'id': 4, 'name': 'cellar_all', 'username': 'cellar_all', 'password': 'cellar_all',
+    return {'name': 'cellar_all', 'username': 'cellar_all', 'password': 'cellar_all',
             'scopes': 'CELLAR:READ CELLAR:WRITE', 'is_admin': 0, 'enabled': 1}
 
 
 @pytest.fixture()
 def inactive_user_data():
-    return {'id': 5, 'name': 'inactive', 'username': 'inactive', 'password': 'inactive',
+    return {'name': 'inactive', 'username': 'inactive', 'password': 'inactive',
             'scopes': '', 'is_admin': 0, 'enabled': 0}
 
 

@@ -94,7 +94,7 @@ def test_create_access_token(expires_delta):
 @pytest.mark.parametrize("scopes", [["CELLAR:READ"], None])
 async def test_get_current_user(scopes, test_app, db_monkeypatch, token_new_user, cellar_all_user_data):
     security_scopes = authentication.SecurityScopes(scopes=scopes)
-    token = token_new_user(data=cellar_all_user_data)
+    token, user_id = token_new_user(data=cellar_all_user_data)
     db_conn = db_monkeypatch
     resp = authentication.Response()
 
@@ -105,14 +105,14 @@ async def test_get_current_user(scopes, test_app, db_monkeypatch, token_new_user
     result = result.dict()
     del result['password']
     del cellar_all_user_data['password']
-    assert result['username'] == cellar_all_user_data['username']
+    del result['id']
     assert result == cellar_all_user_data
 
 
 @pytest.mark.asyncio
 async def test_get_current_user_unauthorized_scopes(test_app, db_monkeypatch, token_new_user, cellar_all_user_data):
     security_scopes = authentication.SecurityScopes(scopes=["A"])
-    token = token_new_user(data=cellar_all_user_data)
+    token, user_id = token_new_user(data=cellar_all_user_data)
     db_conn = db_monkeypatch
     resp = authentication.Response()
 
@@ -129,7 +129,8 @@ async def test_get_current_user_unauthorized_username(test_app, db_monkeypatch, 
     resp = authentication.Response()
 
     # get token and change username to None to test if statement checking presence of a username
-    token = token_new_user(data=cellar_all_user_data)
+    user_data = cellar_all_user_data
+    token, user_id = token_new_user(data=user_data)
     token = authentication.jwt.decode(jwt=token['access_token'], key=authentication.JWT_KEY, algorithms=[authentication.ALGORITHM])
     token['sub'] = None
     token = authentication.jwt.encode(payload=token, key=authentication.JWT_KEY, algorithm=authentication.ALGORITHM)
@@ -148,7 +149,7 @@ async def test_get_current_user_not_exists(test_app, db_monkeypatch, token_new_u
     resp = authentication.Response()
 
     # get token and change username to a non-existing username to test if statement checking presence of a existing user
-    token = token_new_user(data=cellar_all_user_data)
+    token, user_id = token_new_user(data=cellar_all_user_data)
     token = authentication.jwt.decode(jwt=token['access_token'], key=authentication.JWT_KEY, algorithms=[authentication.ALGORITHM])
     token['sub'] = 'non_existing_user'
     token = authentication.jwt.encode(payload=token, key=authentication.JWT_KEY, algorithm=authentication.ALGORITHM)
@@ -163,15 +164,21 @@ async def test_get_current_user_not_exists(test_app, db_monkeypatch, token_new_u
 
 @pytest.mark.asyncio
 async def test_get_current_active_user(test_app, db_monkeypatch, token_new_user, cellar_all_user_data):
-    user = authentication.OwnerModel(**cellar_all_user_data)
+    user_data = cellar_all_user_data
+    token, user_id = token_new_user(data=user_data)
+    user_data['id'] = user_id
+    user = authentication.OwnerModel(**user_data)
     result = await authentication.get_current_active_user(current_user=user)
 
     assert result == user
 
 
 @pytest.mark.asyncio
-async def test_get_current_active_user(test_app, db_monkeypatch, token_new_user, inactive_user_data):
-    user = authentication.OwnerModel(**inactive_user_data)
+async def test_get_current_active_user_inactive(test_app, db_monkeypatch, token_new_user, inactive_user_data):
+    user_data = inactive_user_data
+    token, user_id = token_new_user(data=user_data)
+    user_data['id'] = user_id
+    user = authentication.OwnerModel(**user_data)
 
     with pytest.raises(authentication.HTTPException):
         result = await authentication.get_current_active_user(current_user=user)
