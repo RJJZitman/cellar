@@ -20,12 +20,12 @@ class NewOwnerModel(BaseModel):
 
 
 class UpdateOwnerModel(BaseModel):
-    name: str | None = None
-    username: str | None = None
-    password: str | None = None
-    scopes: str | None = None
-    is_admin: bool | None = None
-    enabled: bool | None = None
+    name: str | None = Field(default="None")
+    username: str | None = Field(default="None")
+    password: str | None = Field(default="None")
+    scopes: str | None = Field(default="None")
+    is_admin: bool | None = Field(default=False)
+    enabled: bool | None = Field(default=True)
 
 
 class OwnerDbModel(OwnerModel):

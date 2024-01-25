@@ -119,15 +119,15 @@ async def delete_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
 
 @router.patch('/update', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
 async def update_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
-                      current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                       new_data: UpdateOwnerModel,
                       current_username: str) -> str:
     """
     ADMIN ONLY ENDPOINT
-    Add new wine/beer owner to the DB.
+    Updates existing wine/beer owner in the DB.
     Required scope(s): USERS:READ, USERS:WRITE
     """
-    # validate whether the new username exists differs from the current username and if so, if it exists in the DB
+
+    # Validate whether the new username exists and if so, if it exists in the DB
     new_user = user_db.execute_query_select(query="SELECT * FROM cellar.owners WHERE username = %(username)s",
                                             params={"username": new_data.username},
                                             get_fields=True)
@@ -135,19 +135,20 @@ async def update_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
         raise HTTPException(status_code=400, detail=f"Users with username {new_user[0]['username']} exist. Please "
                                                     f"provide a unique new username.")
 
-    # find updated values and construct query string
-    new_user_data = get_user(username=current_username, user_db=user_db).dict()
-    current_user_data = current_user.dict()
-    params = {}
-    new_vals, new_val_keys = '', ''
-    for key in set(new_user_data.keys()) | set(current_user_data.keys()):
-        if new_user_data.get(key) != current_user_data.get(key) and new_user_data.get(key) is not None:
-            new_val_keys += f'{key}, '
-            new_vals += f'{key} = %({key})s AND '
-            params[str(key)] = new_user_data.get(key)
-    new_vals = new_vals[:-4]
-    new_val_keys = new_val_keys[:-2]
-    print(f"UPDATE cellar.owners SET {new_vals}")
-    user_db.execute_query(f"UPDATE cellar.owners SET {new_vals}", params=params)
+    # Find updated values and construct query string
+    update_fields = {}
+    for k, v in new_data.dict(exclude_unset=True).items():
+        if k == "password":
+            # Hash the new password
+            update_fields[k] = get_password_hash(v)
+        else:
+            update_fields[k] = v
 
-    return f"User with previous username {current_user.username} has successfully been updated in the DB"
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="No fields provided for update.")
+
+    updated_fields = ", ".join(f"{field} = %({field})s" for field in update_fields)
+    user_db.execute_query(f"UPDATE cellar.owners SET {updated_fields} WHERE username = %(current_username)s",
+                          params={"current_username": current_username, **update_fields})
+
+    return "User information updated successfully."
