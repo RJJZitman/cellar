@@ -156,25 +156,3 @@ def test_update_user(test_app, token_admin, token_new_user, expendable_user_data
     assert response_upd.status_code == status.HTTP_200_OK
     assert response_upd.json() == "User information updated successfully."
 
-
-# @pytest.mark.unit
-# def test_update_user_same_data(test_app, token_admin, token_new_user, update_user_data):
-#     admin_token = token_admin
-#
-#     new_data = update_user_data
-#     _, _ = token_new_user(data=update_user_data)
-#
-#     # harmonize data with DB entry
-#     del new_data['is_admin']
-#     del new_data['enabled']
-#     del new_data['name']
-#     del new_data['password']
-#     response_upd = test_app.patch(url=f'/users/update?current_username={new_data["username"]}',
-#                                   data=json.dumps(new_data),
-#                                   headers={"content-type": "application/json",
-#                                            "Authorization": f"Bearer {admin_token['access_token']}"})
-#     assert response_upd.status_code == status.HTTP_400_BAD_REQUEST
-#     assert response_upd.json()['detail'] == "No fields provided for update."
-
-
-
