@@ -69,7 +69,7 @@ async def get_extended_access_token(user_db: Annotated[MariaDB, Depends(DB_CONN)
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
-@router.get('/get_users', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
+@router.get('/get_users', dependencies=[Security(get_current_active_user)])
 async def get_users(user_db: Annotated[MariaDB, Depends(DB_CONN)]) -> list[OwnerModel]:
     return user_db.execute_query_select(query="SELECT id, name, username, scopes, is_admin, enabled "
                                               "FROM cellar.owners",
@@ -89,11 +89,6 @@ async def add_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
                                         params={"username": owner_data.username})
     if user:
         raise HTTPException(status_code=400, detail=f"A user with username {owner_data.username} already exists")
-
-    # user_db.execute_query(query="INSERT INTO cellar.owners (id, name, username, password, scopes, is_admin, enabled) "
-    #                             "VALUES (%(id)s, %(name)s, %(username)s, %(password)s, %(scopes)s, %(is_admin)s, "
-    #                             "        %(enabled)s)",
-    #                       params={"id": owner_data.id, "name": owner_data.name, "username": owner_data.username,
     user_db.execute_query("INSERT INTO cellar.owners (name, username, password, scopes, is_admin, enabled) "
                           "VALUES (%(name)s, %(username)s, %(password)s, %(scopes)s, %(is_admin)s, "
                           "        %(enabled)s)",
@@ -148,9 +143,6 @@ async def update_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
             update_fields[k] = get_password_hash(v)
         else:
             update_fields[k] = v
-
-    if not update_fields:
-        raise HTTPException(status_code=400, detail="No fields provided for update.")
 
     updated_fields = ", ".join(f"{field} = %({field})s" for field in update_fields)
     user_db.execute_query(f"UPDATE cellar.owners SET {updated_fields} WHERE username = %(current_username)s",

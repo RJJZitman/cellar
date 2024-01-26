@@ -74,9 +74,6 @@ def new_user(test_app):
         data_copy = copy.deepcopy(data)
         del data_copy['password']
         user_id = [user['id'] for user in users if all(user[key] == value for key, value in data_copy.items())][0]
-        print(f"FIXTURE_DATA: {data}")
-        print(f"USER_DATA: {users}")
-        print(f"USER_ID: {user_id}")
         return user_id
     return set_user_scopes
 
@@ -312,6 +309,18 @@ def cellar_all_user_data():
 @pytest.fixture()
 def inactive_user_data():
     return {'name': 'inactive', 'username': 'inactive', 'password': 'inactive',
+            'scopes': '', 'is_admin': 0, 'enabled': 0}
+
+
+@pytest.fixture()
+def expendable_user_data():
+    return {'name': 'delete_me', 'username': 'delete_me', 'password': 'delete_me',
+            'scopes': '', 'is_admin': 0, 'enabled': 0}
+
+
+@pytest.fixture()
+def update_user_data():
+    return {'name': 'updated_unit', 'username': 'updated_unit', 'password': 'updated_unit',
             'scopes': '', 'is_admin': 0, 'enabled': 0}
 
 
