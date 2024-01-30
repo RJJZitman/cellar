@@ -5,15 +5,24 @@ from mysql.connector.errors import DataError
 
 
 from ..db_utils import MariaDB
-from ..models import (OwnerModel, WinesModel, CellarInModel, GeographicInfoModel, RatingModel, ConsumedBottleModel,
-                      CellarOutModel)
+from ..models import WinesModel, CellarInModel, GeographicInfoModel, RatingModel, ConsumedBottleModel, CellarOutModel
 
 
 def unpack_geo_info(geographic_info: GeographicInfoModel) -> str:
+    """Unpacks the data in a GeographicInfoModel instance and returns it as a string"""
     return ",\t".join(f"{k}: {v}" for k, v in geographic_info.dict().items())
 
 
 async def get_storage_id(db_conn: MariaDB, current_user_id: int, location: str, description: str) -> int:
+    """
+    Retrieves the storage ID for a specific storage for a specific user.
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param current_user_id: db id of the current user
+    :param location: storage unit location
+    :param description: storage unit description
+    :return: the storage id
+    """
     storage_id = db_conn.execute_query_select(query="SELECT id FROM cellar.storages "
                                                     "WHERE location = %(location)s "
                                                     "  AND description = %(description)s "
@@ -23,11 +32,18 @@ async def get_storage_id(db_conn: MariaDB, current_user_id: int, location: str, 
     try:
         return storage_id[0]
     except IndexError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Storage unit is not found.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Storage unit is not found.")
 
 
 async def verify_storage_exists_for_user(db_conn: MariaDB, storage_id: int, user_id: int) -> bool:
+    """
+    Verifies whether a provided storage id exists for a specific user
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param storage_id: id of storage unit
+    :param user_id: id of user
+    :return: True if the storage unit exists for the user, False if not
+    """
     info = db_conn.execute_query_select(query="SELECT location, description "
                                               "FROM cellar.storages "
                                               "WHERE id = %(storage_id)s AND owner_id = %(user_id)s",
@@ -39,6 +55,13 @@ async def verify_storage_exists_for_user(db_conn: MariaDB, storage_id: int, user
 
 
 async def verify_empty_storage_unit(db_conn: MariaDB, storage_id: int) -> bool:
+    """
+    Verifies whether a storage unit is empty
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param storage_id: id of storage unit
+    :return: True if the storage unit is empty,raises an HTTP_400 error if not
+    """
     storage = db_conn.execute_query_select(query="SELECT * FROM cellar.cellar "
                                                  "WHERE storage_unit = %(storage_id)s",
                                            params={"storage_id": storage_id},
@@ -53,6 +76,14 @@ async def verify_empty_storage_unit(db_conn: MariaDB, storage_id: int) -> bool:
 
 
 async def verify_wine_in_db(db_conn: MariaDB, name: str, vintage: int) -> bool:
+    """
+    Verifies whether a wine already exists in the DB in the wines table
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param name: name of the wine (beer)
+    :param vintage: year of production/harvest
+    :return: True if the wine exists in the wines table, False if not
+    """
     wine = db_conn.execute_query_select(query="SELECT * FROM cellar.wines "
                                               "WHERE name = %(name)s "
                                               "AND vintage = %(vintage)s",
@@ -63,7 +94,14 @@ async def verify_wine_in_db(db_conn: MariaDB, name: str, vintage: int) -> bool:
         return False
 
 
-async def add_wine_to_db(db_conn: MariaDB, wine_info: WinesModel):
+async def add_wine_to_db(db_conn: MariaDB, wine_info: WinesModel) -> str:
+    """
+    Adds a wine to the DB wine table
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param wine_info: name of the wine (beer)
+    :return: True if the wine exists in the wines table, False if not
+    """
     db_conn.execute_query("INSERT INTO cellar.wines (name, vintage, grapes, type, drink_from, drink_before, "
                           "                          alcohol_vol_perc, geographic_info, quality_signature) "
                           "VALUES "
@@ -78,7 +116,15 @@ async def add_wine_to_db(db_conn: MariaDB, wine_info: WinesModel):
     return "Wine has successfully been added to the DB wines table"
 
 
-async def get_bottle_id(db_conn: MariaDB, name: str, vintage: int) -> bool:
+async def get_bottle_id(db_conn: MariaDB, name: str, vintage: int) -> int:
+    """
+    Retrieves the ID of a wine from the database
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param name: name of the wine
+    :param vintage: vintage of the wine
+    :return: the id of the wine, raises a 404 error if the requested wine is not found in the db
+    """
     wine = db_conn.execute_query_select(query="SELECT id FROM cellar.wines "
                                               "WHERE name = %(name)s "
                                               "AND vintage = %(vintage)s",
@@ -87,11 +133,20 @@ async def get_bottle_id(db_conn: MariaDB, name: str, vintage: int) -> bool:
         return wine[0][0]
     except IndexError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"The requested bottle is not found.")
+                            detail=f"The requested wine is not found.")
 
 
 async def verify_bottle_exists_in_storage_unit(db_conn: MariaDB, wine_id: int, storage_unit: int, bottle_size: float
                                                ) -> bool:
+    """
+    Checks whether a bottle with identical size and wine_id is already stored in a storage unit
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param wine_id: id of the wine from the wines table
+    :param storage_unit: storage unit id
+    :param bottle_size: bottle size in cl
+    :return: True if the bottle is already stored in the cellar, False if not
+    """
     in_storage_unit = db_conn.execute_query_select(query="SELECT * FROM cellar.cellar "
                                                          "WHERE wine_id = %(wine_id)s "
                                                          "   AND storage_unit = %(storage_unit)s "
@@ -106,6 +161,14 @@ async def verify_bottle_exists_in_storage_unit(db_conn: MariaDB, wine_id: int, s
 
 async def update_quantity_in_cellar(db_conn: MariaDB, wine_id: int, bottle_data: CellarInModel | ConsumedBottleModel,
                                     add: bool) -> None:
+    """
+    Updates the quantity of stored bottles in the cellar table. If the quantity is updated to 0, the entry is removed.
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param wine_id: id of the wine from the wines table
+    :param bottle_data: specific info on the bottle. The required info is stored similarly in both type-hinted models
+    :param add: add the provided quantity to the db if True, subtracts if False
+    """
     quantity_operator = "+" if add else "-"
     params = {"quantity": str(bottle_data.quantity),
               "wine_id": str(wine_id),
@@ -129,7 +192,15 @@ async def update_quantity_in_cellar(db_conn: MariaDB, wine_id: int, bottle_data:
                                    "update your stock per storage unit.")
 
 
-async def add_bottle_to_cellar(db_conn: MariaDB, wine_id: int, owner_id: int, wine_data: CellarInModel):
+async def add_bottle_to_cellar(db_conn: MariaDB, wine_id: int, owner_id: int, wine_data: CellarInModel) -> None:
+    """
+    Adds new bottles to the DB by either adding a new entry or updating the quantity of an existing one
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param wine_id: id of the wine from the wines table
+    :param owner_id: id of user/bottle owner
+    :param wine_data: wine specific data
+    """
     # Verify if the bottle already exists in the storage unit
     if await verify_bottle_exists_in_storage_unit(db_conn=db_conn, wine_id=wine_id,
                                                   storage_unit=wine_data.storage_unit,
@@ -149,6 +220,13 @@ async def add_bottle_to_cellar(db_conn: MariaDB, wine_id: int, owner_id: int, wi
 
 
 async def wine_in_db(db_conn: MariaDB, wine_id: int) -> bool:
+    """
+    Verifies whether a wine exists in the DB based on the id
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param wine_id: id of the wine from the wines table
+    :return: True if the provided wine id is known, False if not
+    """
     wine = db_conn.execute_query_select(query="SELECT * FROM cellar.wines WHERE id = %(wine_id)s",
                                         params={"wine_id": wine_id})
     if len(wine):
@@ -158,6 +236,14 @@ async def wine_in_db(db_conn: MariaDB, wine_id: int) -> bool:
 
 
 async def rating_in_db(db_conn: MariaDB, rating_id: int, user_id: int) -> bool:
+    """
+    Verifies whether a wine exists in the DB based on the id of both the rating and the rater i.e., bottle owner
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param rating_id: id of the rating from the ratings table
+    :param user_id: id of user/bottle owner
+    :return: True if the provided wine id is known, False if not
+    """
     rating = db_conn.execute_query_select(query="SELECT * FROM cellar.ratings "
                                                 "WHERE id = %(rating_id)s AND rater_id = %(rater_id)s",
                                           params={"rating_id": rating_id, "rater_id": user_id})
@@ -167,7 +253,16 @@ async def rating_in_db(db_conn: MariaDB, rating_id: int, user_id: int) -> bool:
         return False
 
 
-async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating: RatingModel):
+async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating: RatingModel) -> None:
+    """
+    Adds a rating to the db
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param user_id: id of user/bottle owner
+    :param wine_id: id of the wine from the wines table
+    :param rating: rating data
+    :return: True if the provided wine id is known, False if not
+    """
     db_conn.execute_query("INSERT INTO cellar.ratings (rater_id, wine_id, rating, drinking_date, comments) "
                           "VALUES (%(rater_id)s, %(wine_id)s, %(rating)s, %(drinking_date)s, %(comments)s)",
                           params={"rater_id": user_id, "wine_id": wine_id, "rating": rating.rating,
@@ -176,6 +271,15 @@ async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating:
 
 def get_cellar_out_data(db_conn: MariaDB, params: dict[str, Any] | None = None, where: str | None = None
                         ) -> list[CellarOutModel.schema_json()]:
+    """
+    Retrieves data from the cellar table. Additional where conditions and query parameters can be added to complete the
+    query
+
+    :param db_conn: MariaDB instance to connect to the DB
+    :param params: additional params to complete the query
+    :param where: optional space for where statements to complement the query
+    :return: a list of entries from the cellar DB, formatted tot the CellarOutModel schema
+    """
     query = ("SELECT w.name AS name, w.vintage AS vintage, "
              "       c.id AS cellar_id, "
              "       c.storage_unit AS storage_unit, c.quantity AS quantity,"
