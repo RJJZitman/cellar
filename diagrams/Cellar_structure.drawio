@@ -1,0 +1,34 @@
+<mxfile host="app.diagrams.net" modified="2024-01-30T13:46:26.897Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.2 Safari/605.1.15" etag="Hc3GT00atOXLxiVbgjAH" version="23.0.2" type="device">
+  <diagram name="Pagina-1" id="ppBVbEnmsO7VSknhQhVz">
+    <mxGraphModel dx="1434" dy="863" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="UBlLk-pRCaNRe8xXyh0S-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="UBlLk-pRCaNRe8xXyh0S-1" target="UBlLk-pRCaNRe8xXyh0S-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UBlLk-pRCaNRe8xXyh0S-1" value="" style="image;aspect=fixed;perimeter=ellipsePerimeter;html=1;align=center;shadow=0;dashed=0;spacingTop=3;image=img/lib/active_directory/databases.svg;" vertex="1" parent="1">
+          <mxGeometry x="80" y="258.2" width="100.2" height="98.2" as="geometry" />
+        </mxCell>
+        <mxCell id="UBlLk-pRCaNRe8xXyh0S-4" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNTQgMTU0IiB3aWR0aD0iMjUwMCIgaGVpZ2h0PSIyNTAwIiBmaWxsPSJub25lIj48Y2lyY2xlIHI9Ijc3IiBmaWxsPSIjMDU5OThiIiBjeT0iNzciIGN4PSI3NyIvPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik04MS4zNzUgMTguNjY3bC0zOC43NSA3MEg3Ny41bC0zLjg3NSA0Ni42NjYgMzguNzUtNzBINzcuNXoiLz48L3N2Zz4=;" vertex="1" parent="1">
+          <mxGeometry x="314" y="258.2" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="UBlLk-pRCaNRe8xXyh0S-5" value="" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="279.1" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="UBlLk-pRCaNRe8xXyh0S-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;startArrow=classic;startFill=1;" edge="1" parent="1" source="UBlLk-pRCaNRe8xXyh0S-4" target="UBlLk-pRCaNRe8xXyh0S-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UBlLk-pRCaNRe8xXyh0S-8" value="MariaDB" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="60.1" y="210" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="UBlLk-pRCaNRe8xXyh0S-9" value="FastAPI app" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="294" y="210" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="UBlLk-pRCaNRe8xXyh0S-10" value="Gebruiker" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="500" y="210" width="140" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

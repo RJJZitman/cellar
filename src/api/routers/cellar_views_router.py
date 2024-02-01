@@ -39,7 +39,8 @@ async def get_storage_units(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                                         get_fields=True)
 
 
-@router.get("/wine_in_cellar/get_wine_ratings", dependencies=[Security(get_current_active_user)])
+@router.get("/wine_in_cellar/get_wine_ratings", response_model=list[RatingInDbModel],
+            dependencies=[Security(get_current_active_user)])
 async def get_wine_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                           current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                           wine_id: int,
@@ -62,7 +63,8 @@ async def get_wine_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     return db_conn.execute_query_select(query=query, params={"wine_id": wine_id}, get_fields=True)
 
 
-@router.get("/wine_in_cellar/get_your_ratings", dependencies=[Security(get_current_active_user)])
+@router.get("/wine_in_cellar/get_your_ratings", response_model=list[RatingInDbModel],
+            dependencies=[Security(get_current_active_user)])
 async def get_your_ratings(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                            current_user: Annotated[OwnerModel, Depends(get_current_active_user)]
                            ) -> list[RatingInDbModel]:
@@ -74,7 +76,8 @@ async def get_your_ratings(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                                         params={"rater_id": current_user.id}, get_fields=True)
 
 
-@router.get("/wine_in_cellar/get_your_bottles", dependencies=[Security(get_current_active_user)])
+@router.get("/wine_in_cellar/get_your_bottles", response_model=list[CellarOutModel],
+            dependencies=[Security(get_current_active_user)])
 async def get_your_bottles(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                            current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                            storage_unit: int | None = None) -> list[CellarOutModel]:
@@ -90,7 +93,8 @@ async def get_your_bottles(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                                    where="WHERE c.owner_id = %(user_id)s AND storage_unit = %(storage_unit)s")
 
 
-@router.get("/wine_in_cellar/get_stock_on_bottle", dependencies=[Security(get_current_active_user)])
+@router.get("/wine_in_cellar/get_stock_on_bottle",  response_model=list[CellarOutModel],
+            dependencies=[Security(get_current_active_user)])
 async def get_stock_on_bottle(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                               current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                               wine_id: int) -> list[CellarOutModel]:

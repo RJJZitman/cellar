@@ -69,8 +69,12 @@ async def get_extended_access_token(user_db: Annotated[MariaDB, Depends(DB_CONN)
     return {'access_token': access_token, 'token_type': 'bearer'}
 
 
-@router.get('/get_users', dependencies=[Security(get_current_active_user)])
+@router.get('/get_users', response_model=list[OwnerModel], dependencies=[Security(get_current_active_user)])
 async def get_users(user_db: Annotated[MariaDB, Depends(DB_CONN)]) -> list[OwnerModel]:
+    """
+    Retrieve all registered wine/beer owners.
+    Required scope(s): CELLAR:READ
+    """
     return user_db.execute_query_select(query="SELECT id, name, username, scopes, is_admin, enabled "
                                               "FROM cellar.owners",
                                         get_fields=True)
