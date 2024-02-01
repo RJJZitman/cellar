@@ -51,7 +51,7 @@ def test_delete_storage_units(test_app, token_new_user, cellar_all_user_data, ne
     storages_post = test_app.get(url='/cellar_views/storages/get',
                                  headers={"content-type": "application/json",
                                           "Authorization": f"Bearer {token['access_token']}"})
-    storage_unit_data["owner_id"] = user_id#user_data["id"]
+    storage_unit_data["owner_id"] = user_id
     storage_unit_data['id'] = get_resp[-1]['id']
 
     assert response.status_code == status.HTTP_200_OK
