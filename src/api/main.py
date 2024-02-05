@@ -48,26 +48,26 @@ async def root():
 
 @app.get("/login", include_in_schema=False)
 async def login_for_docs(auth: Annotated[BasicAuth, Depends(basic_auth)],
-                         user_db: Annotated[MariaDB, Depends(DB_CONN)]):
+                         db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
     """
     Endpoint used to access the swagger UI. This endpoint is only called in the WebBrowser and for debugging
     purposes only.
     Required scope(s): None
 
     :param auth: Authorisation form
-    :param user_db: Dependency yielding a live DB connection
+    :param db_conn: Dependency yielding a live DB connection
     """
     if not auth:
         return Response(headers={"WWW-Authenticate": "Basic"}, status_code=401)
     try:
-        decoded = base64.b64decode(auth).decode("ascii")
-        username, _, password = decoded.partition(":")
-        user = authenticate_user(username=username, password=password, user_db=user_db)
+        dec_auth = base64.b64decode(auth).decode("ascii")
+        username, _, pw = dec_auth.partition(":")
+        user = authenticate_user(username=username, password=pw, user_db=db_conn)
         print("user is found")
         if not user:
-            raise HTTPException(status_code=400, detail="Incorrect email or password")
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRATION_MIN)
-        access_token = create_access_token(data={"sub": username}, expires_delta=access_token_expires)
+            raise HTTPException(status_code=400, detail="Incorrect login credentials")
+        access_token_exp = timedelta(minutes=ACCESS_TOKEN_EXPIRATION_MIN)
+        access_token = create_access_token(data={"sub": username}, expires_delta=access_token_exp)
 
         response = RedirectResponse(url="/docs")
         response.set_cookie(key="Authorization",
@@ -77,16 +77,15 @@ async def login_for_docs(auth: Annotated[BasicAuth, Depends(basic_auth)],
         return response
     except Exception as e:
         print(e)
-        response = Response(headers={"WWW-Authenticate": "Basic"}, status_code=401)
+        response = Response(headers={"WWW-Authenticate": "Basic"}, status_code=401, content="Invalid login")
         return response
 
 
 @app.get("/docs", dependencies=[Depends(get_current_active_user)], include_in_schema=False)
 async def get_documentation(request: Request):
     """
-    Builds the documentation page of the swagger UI. This endpoint is only called by the /login endpoint when it is
-    accessed in the WebBrowser. This endpoint is meant only for debugging purposes.
-    purposes only.
+    Sets up the swagger UI. Should only be called by the /login page.
+
     Required scope(s): None
     """
     root_path = request.scope.get("root_path", "").rstrip("/")

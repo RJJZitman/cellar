@@ -25,6 +25,7 @@ async def post_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
                             storage_data: StorageInModel) -> str:
     """
     Add a storage unit to the DB.
+
     Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
     db_conn.execute_query(("INSERT INTO cellar.storages (owner_id, location, description) "
@@ -69,6 +70,8 @@ async def add_wine_to_cellar(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     """
     Adds bottles to your cellar. Make sure to provide the correct storage unit ID. You can check what storages you can
     add wines to from the '/storages/get' endpoint.
+
+    Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
     # Check if storage unit is valid
     if not await verify_storage_exists_for_user(db_conn=db_conn, storage_id=wine_data.storage_unit,
@@ -98,6 +101,8 @@ async def add_a_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
     """
     Adds a rating to your DB. Note that if you've drunk a bottle, you can make use of the '/wine_in_cellar/consumed'
     endpoint to both add a rating and update your storage.
+
+    Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
     # Verify the wine exists in the DB
     if not await wine_in_db(db_conn=db_conn, wine_id=wine_id):
@@ -115,8 +120,10 @@ async def remove_consumed_from_stock(db_conn: Annotated[MariaDB, Depends(DB_CONN
                                      rate_bottle: bool = True,
                                      rating: RatingModel | None = None) -> str:
     """
-    Removes a bottle from your cellar, if the 'rate_bottle' flag is set to True, the rating argument is required, else it
-    will be ignored and can be left in the default state.
+    Removes a bottle from your cellar, if the 'rate_bottle' flag is set to True, the rating argument is required, else
+    it will be ignored and can be left in the default state.
+
+    Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
     # Verify the wine exists in the DB
     if not await wine_in_db(db_conn=db_conn, wine_id=bottle_data.wine_id):
@@ -138,6 +145,8 @@ async def move_bottle_to_other_storage(db_conn: Annotated[MariaDB, Depends(DB_CO
                                        new_storage_unit: int) -> str:
     """
     Move a bottle from one storage unit to another.
+
+    Required scope(s): CELLAR:READ, CELLAR:WRITE
     """
     if await verify_storage_exists_for_user(db_conn=db_conn, storage_id=new_storage_unit, user_id=current_user.id):
         db_conn.execute_query("UPDATE cellar.cellar SET storage_unit = %(storage_unit)s WHERE id = %(cellar_id)s",

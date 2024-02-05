@@ -18,14 +18,12 @@ def test_get_owners(test_app, token_new_user, cellar_read_user_data):
     user_data = cellar_read_user_data
     token, user_id = token_new_user(data=user_data)
     # add a user and verify if you can find it
-    response = test_app.get(url='/cellar_views/owners/get',
+    response = test_app.get(url='/cellar_views/owners/get_your_id',
                             headers={"content-type": "application/x-www-form-urlencoded",
                                      "Authorization": f"Bearer {token['access_token']}"})
-    del user_data['password']
-    user_data['id'] = user_id
 
     assert response.status_code == status.HTTP_200_OK
-    assert user_data in response.json()
+    assert user_id == response.json()
 
 
 @pytest.mark.unit
