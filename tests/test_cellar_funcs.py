@@ -5,7 +5,7 @@ from polyfactory.pytest_plugin import register_fixture
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from api.routers import cellar_funcs
-from api.models import GeographicInfoModel, OwnerModel, RatingModel, CellarOutModel
+from api.models import GeographicInfoModel, RatingModel, CellarOutModel
 
 
 @register_fixture
