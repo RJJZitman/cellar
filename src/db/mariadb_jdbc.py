@@ -16,11 +16,6 @@ class JdbcMariaDB(JdbcDbConn):
     """
     DB connector class for a JDBC connection to a MariaDB service.
     """
-    # def __subclasscheck__(self, subclass):
-    #     return isinstance(subclass, type) and issubclass(subclass, JdbcDbConn)
-    #
-    # def __instancecheck__(self, instance):
-    #     return isinstance(instance, JdbcDbConn)
 
     def __init__(self, user: str, password: str, database: str, host: str = 'localhost', port: int = 3306) -> None:
         """
@@ -165,4 +160,3 @@ class JdbcMariaDB(JdbcDbConn):
         else:
             return IndexError(f"Record in table {table} with PK ({pk_field}) = {pk_val} could not be deleted, because "
                               f"it does not exist.")
-
