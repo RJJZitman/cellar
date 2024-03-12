@@ -14,3 +14,4 @@ PyYAML==6.0.1
 starlette==0.27.0
 pytest-asyncio
 polyfactory==2.13.0
+polars

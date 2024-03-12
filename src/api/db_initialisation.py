@@ -2,7 +2,8 @@ import os
 import time
 import yaml
 
-from .db_utils import MariaDB
+from db.mariadb_jdbc import JdbcMariaDB
+from db.jdbc_interface import JdbcDbConn
 from .constants import SRC, SQL
 from .models import DbConnModel
 from .authentication import get_password_hash
@@ -23,7 +24,7 @@ def database_service(restarted: bool = True) -> bool:
         return False
 
 
-def setup_new_database(db_conn: MariaDB) -> None:
+def setup_new_database(db_conn: JdbcDbConn) -> None:
     """
     Drops the cellar DB and re-builds a clean/empty version.
 
@@ -34,7 +35,7 @@ def setup_new_database(db_conn: MariaDB) -> None:
     db_conn.execute_sql_file(file_path=f'{SQL}create_tables.sql')
 
 
-def make_db_admin_user(db_conn: MariaDB) -> None:
+def make_db_admin_user(db_conn: JdbcDbConn) -> None:
     """
     Creates an admin user from the env file for credentials for ultimate DB/API access.
 
@@ -49,7 +50,7 @@ def make_db_admin_user(db_conn: MariaDB) -> None:
                                   "password": get_password_hash(password=env['DB_PW'])})
 
 
-def check_for_cellar_db(db_conn: MariaDB) -> bool:
+def check_for_cellar_db(db_conn: JdbcDbConn) -> bool:
     """
     Verifies whether the cellar DB exists and contains expected tables.
 
@@ -69,7 +70,7 @@ def check_for_cellar_db(db_conn: MariaDB) -> bool:
         return False
 
 
-def check_for_admin_user(db_conn: MariaDB) -> bool:
+def check_for_admin_user(db_conn: JdbcDbConn) -> bool:
     """
     Verifies whether the admin user exists.
 
@@ -91,7 +92,7 @@ def db_setup(db_creds: DbConnModel, restarted: bool = True) -> None:
     :param restarted: Denotes whether the DB service should be restarted.
     """
     database_service(restarted=restarted)
-    with MariaDB(**db_creds.dict()) as db:
+    with JdbcMariaDB(**db_creds.dict()) as db:
         if not check_for_cellar_db(db_conn=db):
             setup_new_database(db_conn=db)
         if not check_for_admin_user(db_conn=db):

@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import HTTPException, status
 from fastapi import APIRouter, Depends, Security
 
-from .cellar_funcs import wine_in_db, get_cellar_out_data
+from db.jdbc_interface import JdbcDbConn
 
-from ..db_utils import MariaDB
+from .cellar_funcs import wine_in_db, get_cellar_out_data
 from ..constants import DB_CONN
 from ..authentication import get_current_active_user
 from ..models import OwnerModel, StorageOutModel, RatingInDbModel, CellarOutModel
@@ -28,7 +28,7 @@ async def get_owners(current_user: Annotated[OwnerModel, Depends(get_current_act
 
 
 @router.get("/storages/get", response_model=list[StorageOutModel], dependencies=[Security(get_current_active_user)])
-async def get_storage_units(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def get_storage_units(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                             current_user: Annotated[OwnerModel, Depends(get_current_active_user)]
                             ) -> list[StorageOutModel]:
     """
@@ -43,7 +43,7 @@ async def get_storage_units(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
 @router.get("/wine_in_cellar/get_wine_ratings", response_model=list[RatingInDbModel],
             dependencies=[Security(get_current_active_user)])
-async def get_wine_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def get_wine_rating(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                           current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                           wine_id: int,
                           only_your_ratings: bool = True) -> list[RatingInDbModel]:
@@ -69,7 +69,7 @@ async def get_wine_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
 @router.get("/wine_in_cellar/get_your_ratings", response_model=list[RatingInDbModel],
             dependencies=[Security(get_current_active_user)])
-async def get_your_ratings(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def get_your_ratings(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                            current_user: Annotated[OwnerModel, Depends(get_current_active_user)]
                            ) -> list[RatingInDbModel]:
     """
@@ -84,7 +84,7 @@ async def get_your_ratings(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
 @router.get("/wine_in_cellar/get_your_bottles", response_model=list[CellarOutModel],
             dependencies=[Security(get_current_active_user)])
-async def get_your_bottles(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def get_your_bottles(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                            current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                            storage_unit: int | None = None) -> list[CellarOutModel]:
     """
@@ -103,7 +103,7 @@ async def get_your_bottles(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
 @router.get("/wine_in_cellar/get_stock_on_bottle",  response_model=list[CellarOutModel],
             dependencies=[Security(get_current_active_user)])
-async def get_stock_on_bottle(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def get_stock_on_bottle(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                               current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                               wine_id: int) -> list[CellarOutModel]:
     """

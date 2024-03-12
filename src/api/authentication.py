@@ -7,7 +7,8 @@ from passlib.context import CryptContext
 from fastapi.security import SecurityScopes
 from fastapi import Depends, HTTPException, status, Response
 
-from .db_utils import MariaDB
+from db.jdbc_interface import JdbcDbConn
+
 from .auth_utils import OAuth2PasswordBearerCookie
 from .models import OwnerDbModel, OwnerModel, TokenData
 from .constants import JWT_KEY, ALGORITHM, SCOPES, DB_CONN
@@ -54,7 +55,7 @@ def verify_scopes(scopes: list[str], user_scopes: str, is_admin: bool = False) -
     return [scope for scope in scopes if scope in user_scopes.split(' ')]
 
 
-def get_user(username: str, user_db: MariaDB) -> OwnerDbModel | None:
+def get_user(username: str, user_db: JdbcDbConn) -> OwnerDbModel | None:
     """
     Get the user information for a user from the database. Return None if the user does not exist.
 
@@ -72,7 +73,7 @@ def get_user(username: str, user_db: MariaDB) -> OwnerDbModel | None:
         return
 
 
-def authenticate_user(username: str, password: str, user_db: MariaDB) -> OwnerDbModel | bool:
+def authenticate_user(username: str, password: str, user_db: JdbcDbConn) -> OwnerDbModel | bool:
     """
     Authenticate a specified username and password with the database.
     Return the user model if verification is ok, or False.
@@ -109,7 +110,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 
 
 async def get_current_user(security_scopes: SecurityScopes, token: Annotated[str, Depends(oauth2_scheme)],
-                           user_db: Annotated[MariaDB, Depends(DB_CONN)],
+                           user_db: Annotated[JdbcDbConn, Depends(DB_CONN)],
                            response: Response) -> OwnerDbModel:
     """
     Dependency to validate a JWT token. It checks if the token is linked to a valid user and if the token has all the

@@ -7,7 +7,8 @@ from .cellar_funcs import (get_storage_id, verify_storage_exists_for_user, verif
                            add_wine_to_db, get_bottle_id, add_bottle_to_cellar, wine_in_db, add_rating_to_db,
                            update_quantity_in_cellar)
 
-from ..db_utils import MariaDB
+from db.jdbc_interface import JdbcDbConn
+
 from ..constants import DB_CONN
 from ..authentication import get_current_active_user
 from ..models import OwnerModel, StorageInModel, CellarInModel, RatingModel, ConsumedBottleModel
@@ -20,7 +21,7 @@ router = APIRouter(prefix="/cellar",
 
 
 @router.post("/storages/add", dependencies=[Security(get_current_active_user)])
-async def post_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def post_storage_unit(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                             current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                             storage_data: StorageInModel) -> str:
     """
@@ -37,7 +38,7 @@ async def post_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
 
 @router.delete("/storages/delete", dependencies=[Security(get_current_active_user)])
-async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def delete_storage_unit(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                               current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                               location: Annotated[str, Query(max_length=200)],
                               description: Annotated[str, Query(max_length=200)]) -> str:
@@ -64,7 +65,7 @@ async def delete_storage_unit(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
 
 @router.post("/wine_in_cellar/add", dependencies=[Security(get_current_active_user)])
-async def add_wine_to_cellar(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def add_wine_to_cellar(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                              current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                              wine_data: CellarInModel) -> str:
     """
@@ -94,7 +95,7 @@ async def add_wine_to_cellar(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
 
 @router.post("/wine_in_cellar/add_rating", dependencies=[Security(get_current_active_user)])
-async def add_a_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def add_a_rating(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                        current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                        wine_id: int,
                        rating: RatingModel) -> str:
@@ -114,7 +115,7 @@ async def add_a_rating(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
 
 
 @router.patch("/wine_in_cellar/consumed", dependencies=[Security(get_current_active_user)])
-async def remove_consumed_from_stock(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def remove_consumed_from_stock(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                                      current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                                      bottle_data: ConsumedBottleModel,
                                      rate_bottle: bool = True,
@@ -139,7 +140,7 @@ async def remove_consumed_from_stock(db_conn: Annotated[MariaDB, Depends(DB_CONN
 
 
 @router.patch("/wine_in_cellar/move", dependencies=[Security(get_current_active_user)])
-async def move_bottle_to_other_storage(db_conn: Annotated[MariaDB, Depends(DB_CONN)],
+async def move_bottle_to_other_storage(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                                        current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                                        cellar_id: int,
                                        new_storage_unit: int) -> str:
