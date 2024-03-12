@@ -1,12 +1,13 @@
 from enum import Enum
-from typing import Annotated
+from typing import Annotated, Type
 from datetime import timedelta
 
 from fastapi import HTTPException, status
 from fastapi import APIRouter, Depends, Security, Form
 from fastapi.security import OAuth2PasswordRequestForm
 
-from ..db_utils import MariaDB
+from db.jdbc_interface import JdbcDbConn
+
 from ..constants import ACCESS_TOKEN_EXPIRATION_MIN, SCOPES, DB_CONN
 from ..authentication import (authenticate_user, create_access_token, verify_scopes, get_password_hash,
                               get_current_active_user, get_user)
@@ -22,7 +23,7 @@ router = APIRouter(prefix="/users",
 
 @router.post(path='/token', response_model=Token)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-                                 user_db: Annotated[MariaDB, Depends(DB_CONN)]):
+                                 user_db: Annotated[JdbcDbConn, Depends(DB_CONN)]):
     f"""
     Login form for Oauth2. Validates credentials, verifies permissions and generates an access token with only 
     the specified scopes that this user has access to. Tokens are valid for {ACCESS_TOKEN_EXPIRATION_MIN} minutes. This
@@ -46,7 +47,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
 
 @router.post(path='/extendedtoken', response_model=Token,
              dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
-async def get_extended_access_token(user_db: Annotated[MariaDB, Depends(DB_CONN)],
+async def get_extended_access_token(user_db: Annotated[JdbcDbConn, Depends(DB_CONN)],
                                     token_user: Annotated[str, Form()],
                                     scopes: Annotated[list[SCOPES_ENUM], Form()],
                                     days_valid: Annotated[int, Form(..., ge=1, le=365)]):
@@ -70,7 +71,7 @@ async def get_extended_access_token(user_db: Annotated[MariaDB, Depends(DB_CONN)
 
 
 @router.get('/get_users', response_model=list[OwnerModel], dependencies=[Security(get_current_active_user)])
-async def get_users(user_db: Annotated[MariaDB, Depends(DB_CONN)]) -> list[OwnerModel]:
+async def get_users(user_db: Annotated[JdbcDbConn, Depends(DB_CONN)]) -> list[OwnerModel]:
     """
     Retrieve all registered wine/beer owners.
     Required scope(s): CELLAR:READ
@@ -81,7 +82,7 @@ async def get_users(user_db: Annotated[MariaDB, Depends(DB_CONN)]) -> list[Owner
 
 
 @router.post('/add', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
-async def add_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
+async def add_user(user_db: Annotated[JdbcDbConn, Depends(DB_CONN)],
                    owner_data: NewOwnerModel) -> str:
     """
     ADMIN ONLY ENDPOINT
@@ -104,7 +105,7 @@ async def add_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
 
 
 @router.delete('/delete', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
-async def delete_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
+async def delete_user(user_db: Annotated[JdbcDbConn, Depends(DB_CONN)],
                       delete_username: str) -> str:
     """
     ADMIN ONLY ENDPOINT
@@ -122,7 +123,7 @@ async def delete_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
 
 
 @router.patch('/update', dependencies=[Security(get_current_active_user, scopes=['USERS:WRITE'])])
-async def update_user(user_db: Annotated[MariaDB, Depends(DB_CONN)],
+async def update_user(user_db: Annotated[JdbcDbConn, Depends(DB_CONN)],
                       new_data: UpdateOwnerModel,
                       current_username: str) -> str:
     """

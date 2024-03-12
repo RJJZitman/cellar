@@ -1,5 +1,6 @@
 import yaml
 
+from db.mariadb_jdbc import JdbcMariaDB
 from .models import DbConnModel
 from .dependencies import DBConnDep
 
@@ -12,7 +13,8 @@ SQL = f'{SRC}sql/'
 with open(f'{SRC}env.yml', 'r') as file:
     env = yaml.safe_load(file)
 DB_CREDS = DbConnModel(user=env['DB_USER'], password=env['DB_PW'])
-DB_CONN = DBConnDep(DB_CREDS)
+# DB_CONN = DBConnDep(db_creds=DB_CREDS, db_conn_class=JdbcMariaDB)
+DB_CONN = DBConnDep(db_creds=DB_CREDS)
 
 JWT_KEY = env['JWT_KEY']
 ALGORITHM = env['JWT_ALGORITHM']

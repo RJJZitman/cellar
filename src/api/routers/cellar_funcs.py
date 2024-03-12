@@ -3,8 +3,8 @@ from typing import Any
 from fastapi import HTTPException, status
 from mysql.connector.errors import DataError
 
+from db.jdbc_interface import JdbcDbConn
 
-from ..db_utils import MariaDB
 from ..models import WinesModel, CellarInModel, GeographicInfoModel, RatingModel, ConsumedBottleModel, CellarOutModel
 
 
@@ -13,7 +13,7 @@ def unpack_geo_info(geographic_info: GeographicInfoModel) -> str:
     return ",\t".join(f"{k}: {v}" for k, v in geographic_info.dict().items())
 
 
-async def get_storage_id(db_conn: MariaDB, current_user_id: int, location: str, description: str) -> int:
+async def get_storage_id(db_conn: JdbcDbConn, current_user_id: int, location: str, description: str) -> int:
     """
     Retrieves the storage ID for a specific storage for a specific user.
 
@@ -35,7 +35,7 @@ async def get_storage_id(db_conn: MariaDB, current_user_id: int, location: str, 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Storage unit is not found.")
 
 
-async def verify_storage_exists_for_user(db_conn: MariaDB, storage_id: int, user_id: int) -> bool:
+async def verify_storage_exists_for_user(db_conn: JdbcDbConn, storage_id: int, user_id: int) -> bool:
     """
     Verifies whether a provided storage id exists for a specific user
 
@@ -54,7 +54,7 @@ async def verify_storage_exists_for_user(db_conn: MariaDB, storage_id: int, user
         return False
 
 
-async def verify_empty_storage_unit(db_conn: MariaDB, storage_id: int) -> bool:
+async def verify_empty_storage_unit(db_conn: JdbcDbConn, storage_id: int) -> bool:
     """
     Verifies whether a storage unit is empty
 
@@ -75,7 +75,7 @@ async def verify_empty_storage_unit(db_conn: MariaDB, storage_id: int) -> bool:
         return True
 
 
-async def verify_wine_in_db(db_conn: MariaDB, name: str, vintage: int) -> bool:
+async def verify_wine_in_db(db_conn: JdbcDbConn, name: str, vintage: int) -> bool:
     """
     Verifies whether a wine already exists in the DB in the wines table
 
@@ -94,7 +94,7 @@ async def verify_wine_in_db(db_conn: MariaDB, name: str, vintage: int) -> bool:
         return False
 
 
-async def add_wine_to_db(db_conn: MariaDB, wine_info: WinesModel) -> str:
+async def add_wine_to_db(db_conn: JdbcDbConn, wine_info: WinesModel) -> str:
     """
     Adds a wine to the DB wine table
 
@@ -116,7 +116,7 @@ async def add_wine_to_db(db_conn: MariaDB, wine_info: WinesModel) -> str:
     return "Wine has successfully been added to the DB wines table"
 
 
-async def get_bottle_id(db_conn: MariaDB, name: str, vintage: int) -> int:
+async def get_bottle_id(db_conn: JdbcDbConn, name: str, vintage: int) -> int:
     """
     Retrieves the ID of a wine from the database
 
@@ -136,7 +136,7 @@ async def get_bottle_id(db_conn: MariaDB, name: str, vintage: int) -> int:
                             detail=f"The requested wine is not found.")
 
 
-async def verify_bottle_exists_in_storage_unit(db_conn: MariaDB, wine_id: int, storage_unit: int, bottle_size: float
+async def verify_bottle_exists_in_storage_unit(db_conn: JdbcDbConn, wine_id: int, storage_unit: int, bottle_size: float
                                                ) -> bool:
     """
     Checks whether a bottle with identical size and wine_id is already stored in a storage unit
@@ -159,7 +159,7 @@ async def verify_bottle_exists_in_storage_unit(db_conn: MariaDB, wine_id: int, s
         return False
 
 
-async def update_quantity_in_cellar(db_conn: MariaDB, wine_id: int, bottle_data: CellarInModel | ConsumedBottleModel,
+async def update_quantity_in_cellar(db_conn: JdbcDbConn, wine_id: int, bottle_data: CellarInModel | ConsumedBottleModel,
                                     add: bool) -> None:
     """
     Updates the quantity of stored bottles in the cellar table. If the quantity is updated to 0, the entry is removed.
@@ -192,7 +192,7 @@ async def update_quantity_in_cellar(db_conn: MariaDB, wine_id: int, bottle_data:
                                    "update your stock per storage unit.")
 
 
-async def add_bottle_to_cellar(db_conn: MariaDB, wine_id: int, owner_id: int, wine_data: CellarInModel) -> None:
+async def add_bottle_to_cellar(db_conn: JdbcDbConn, wine_id: int, owner_id: int, wine_data: CellarInModel) -> None:
     """
     Adds new bottles to the DB by either adding a new entry or updating the quantity of an existing one
 
@@ -219,7 +219,7 @@ async def add_bottle_to_cellar(db_conn: MariaDB, wine_id: int, owner_id: int, wi
                                       "drink_before": wine_data.wine_info.drink_before})
 
 
-async def wine_in_db(db_conn: MariaDB, wine_id: int) -> bool:
+async def wine_in_db(db_conn: JdbcDbConn, wine_id: int) -> bool:
     """
     Verifies whether a wine exists in the DB based on the id
 
@@ -235,7 +235,7 @@ async def wine_in_db(db_conn: MariaDB, wine_id: int) -> bool:
         return False
 
 
-async def rating_in_db(db_conn: MariaDB, rating_id: int, user_id: int) -> bool:
+async def rating_in_db(db_conn: JdbcDbConn, rating_id: int, user_id: int) -> bool:
     """
     Verifies whether a wine exists in the DB based on the id of both the rating and the rater i.e., bottle owner
 
@@ -253,7 +253,7 @@ async def rating_in_db(db_conn: MariaDB, rating_id: int, user_id: int) -> bool:
         return False
 
 
-async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating: RatingModel) -> None:
+async def add_rating_to_db(db_conn: JdbcDbConn, user_id: int, wine_id: int, rating: RatingModel) -> None:
     """
     Adds a rating to the db
 
@@ -269,7 +269,7 @@ async def add_rating_to_db(db_conn: MariaDB, user_id: int, wine_id: int, rating:
                                   "drinking_date": rating.drinking_date, "comments": rating.comments})
 
 
-def get_cellar_out_data(db_conn: MariaDB, params: dict[str, Any] | None = None, where: str | None = None
+def get_cellar_out_data(db_conn: JdbcDbConn, params: dict[str, Any] | None = None, where: str | None = None
                         ) -> list[CellarOutModel.schema_json()]:
     """
     Retrieves data from the cellar table. Additional where conditions and query parameters can be added to complete the

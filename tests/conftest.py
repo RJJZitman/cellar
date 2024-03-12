@@ -282,8 +282,8 @@ def db_monkeypatch(in_memory_db_conn, monkeypatch):
         def _close_connection(self):
             pass
 
-    monkeypatch.setattr(dependencies, 'MariaDB', MockMariaDB)
-    monkeypatch.setattr(db_initialisation, 'MariaDB', MockMariaDB)
+    monkeypatch.setattr(dependencies, 'JdbcMariaDB', MockMariaDB)
+    monkeypatch.setattr(db_initialisation, 'JdbcMariaDB', MockMariaDB)
 
     return MockMariaDB(**constants.DB_CREDS.dict())
 

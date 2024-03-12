@@ -11,6 +11,7 @@ setuptools.setup(
     install_requires=[
         "fastapi<0.100.0",
         "pandas",
+        "polars",
         "pydantic<2.0.0",
         "uvicorn",
         "gunicorn",

@@ -12,7 +12,8 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.responses import RedirectResponse, Response
 from fastapi import FastAPI, Depends, HTTPException, Request
 
-from .db_utils import MariaDB
+from db.jdbc_interface import JdbcDbConn
+
 from .auth_utils import BasicAuth
 from .db_initialisation import db_setup
 from .routers import users_router, cellar_router, cellar_views_router
@@ -48,7 +49,7 @@ async def root():
 
 @app.get("/login", include_in_schema=False)
 async def login_for_docs(auth: Annotated[BasicAuth, Depends(basic_auth)],
-                         db_conn: Annotated[MariaDB, Depends(DB_CONN)]):
+                         db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)]):
     """
     Endpoint used to access the swagger UI. This endpoint is only called in the WebBrowser and for debugging
     purposes only.
