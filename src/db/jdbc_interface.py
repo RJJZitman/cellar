@@ -100,6 +100,6 @@ class JdbcDbConn(metaclass=ABCMeta):
 
     def upsert(self, data: dict, table: str, pk_field: str, pk_val: Any) -> None:
         if self.record_exists(table=table, pk_field=pk_field, pk_val=pk_val):
-            self.update(data=data, table=table, pk_field=pk_field, key_val=pk_val)
+            self.update(data=data, table=table, pk_field=pk_field,  pk_val=pk_val)
         else:
             self.create_records(data, table=table)
