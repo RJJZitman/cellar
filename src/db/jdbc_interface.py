@@ -98,7 +98,7 @@ class JdbcDbConn(metaclass=ABCMeta):
             queries = queries[0]
         elif len(queries) < 1:
             raise ValueError("No queries found in the SQL file.")
-        self.execute_query(queries[0], params=params)
+        self.execute_query(queries, params=params)
 
     def upsert(self, data: dict, table: str, pk_field: str, pk_val: Any) -> None:
         if self.record_exists(table=table, pk_field=pk_field, pk_val=pk_val):
