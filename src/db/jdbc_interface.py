@@ -6,8 +6,6 @@ class JdbcDbConn(metaclass=ABCMeta):
     """
     Interface for DB connector classes connecting to a DB service via a JDBC connection.
     """
-    def __instancecheck__(self, instance):
-        return isinstance(instance, JdbcDbConn)
 
     def __call__(self):
         return self
