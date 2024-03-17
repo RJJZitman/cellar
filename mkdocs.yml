@@ -1,0 +1,60 @@
+site_name: VinoDB
+nav:
+  - Home: index.md
+  - Project Overview: projectoverview.md
+  - Database: database.md
+  - API: API.md
+  - Testing: testing.md
+theme:
+  name: material
+#  logo: img/i4talent-logo.png
+#  site_favicon: img/favicon.ico
+  features:
+        - content.tabs.link
+        - content.code.copy
+        - navigation.instant
+        - navigation.tracking
+        - navigation.tabs
+        - navigation.tabs.sticky
+        - navigation.sections
+        - navigation.expand
+
+  palette:
+        - media: "(prefers-color-scheme: light)"
+          scheme: default
+          toggle:
+              icon: material/toggle-switch-off-outline
+              name: Switch to dark mode
+          primary: red
+          accent: white
+        - media: "(prefers-color-scheme: dark)"
+          scheme: slate
+          toggle:
+              icon: material/toggle-switch
+              name: Switch to light mode
+          primary: red
+          accent: white
+
+plugins: 
+  - search
+  - git-authors:
+            exclude:
+                - index.md
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+
+markdown_extensions:
+    - tables
+    - meta
+    - admonition
+    - pymdownx.keys
+    - pymdownx.highlight
+    - pymdownx.inlinehilite
+    - pymdownx.snippets
+    - pymdownx.superfences
+    - pymdownx.details
+    - pymdownx.tabbed:
+        alternate_style: true 
