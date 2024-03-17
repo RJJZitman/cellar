@@ -150,3 +150,25 @@ async def test_get_stock_on_bottle(test_app, token_new_user, cellar_all_user_dat
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json()[0]['quantity'] == quantity
+
+
+@pytest.mark.asyncio
+async def test_get_bottle_open_window(test_app, token_new_user, cellar_all_user_data, new_storage_unit,
+                                      fake_storage_unit_x, bottle_cellar_fixture, db_monkeypatch):
+    db_test_conn = db_monkeypatch
+    user_data = cellar_all_user_data
+    token, user_id = token_new_user(data=user_data)
+    storage_unit_data = fake_storage_unit_x()
+    post_resp, get_resp = new_storage_unit(storage_unit_data=storage_unit_data, token=token)
+    quantity = 6
+    resp, bottle_info = bottle_cellar_fixture(token=token, add=True, quantity=quantity, storage_unit=get_resp[-1]['id'])
+
+    # w_id = await cellar_funcs.get_bottle_id(db_conn=db_test_conn, name=bottle_info.wine_info.name,
+    #                                         vintage=bottle_info.wine_info.vintage)
+    response = test_app.get(url=f'/cellar_views/wine_in_cellar/drink_in_window'
+                                f'?drink_year={bottle_info.wine_info.drink_from.year}'
+                                f'&beverage_type={bottle_info.wine_info.type}',
+                            headers={"content-type": "application/json",
+                                     "Authorization": f"Bearer {token['access_token']}"})
+
+    assert response.status_code == status.HTTP_200_OK

@@ -1,4 +1,5 @@
 from typing import Annotated
+from datetime import datetime
 
 from fastapi import HTTPException, status
 from fastapi import APIRouter, Depends, Security
@@ -107,10 +108,33 @@ async def get_stock_on_bottle(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
                               current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
                               wine_id: int) -> list[CellarOutModel]:
     """
-    Get an overview of all your bottles of a specific bottle stored in your cellar.
+    Get an overview of all your bottles of a specific wine stored in your cellar.
 
     Required scope(s): CELLAR:READ
     """
     return get_cellar_out_data(db_conn=db_conn, params={"user_id": current_user.id, "wine_id": wine_id},
                                where="WHERE c.owner_id = %(user_id)s AND wine_id = %(wine_id)s")
 
+
+@router.get("/wine_in_cellar/drink_in_window", response_model=list[CellarOutModel],
+            dependencies=[Security(get_current_active_user)])
+async def get_bottle_open_window(db_conn: Annotated[JdbcDbConn, Depends(DB_CONN)],
+                                 current_user: Annotated[OwnerModel, Depends(get_current_active_user)],
+                                 drink_year: int | None = None,
+                                 beverage_type: str | None = None) -> list[CellarOutModel]:
+    """
+    Retrieve all bottles that are drinkable now or within a specified year. The returned list of drink-ready bottles
+    can be trimmed by specifying a certain beverage_type.
+
+    Required scope(s): CELLAR:READ
+    """
+    drink_when_cond = 'c.drink_from <= %(drink_year)s AND c.drink_before >= %(drink_year)s'
+    owner_cond = 'c.owner_id = %(user_id)s'
+    drink_year = datetime.now().year if drink_year is None else drink_year
+
+    params = {"drink_year": datetime(year=drink_year, month=1, day=1), "user_id": current_user.id}
+    where = f'WHERE {drink_when_cond} AND {owner_cond} '
+    if beverage_type is not None:
+        params["bev_type"] = beverage_type
+        where += f'AND w.type = %(bev_type)s'
+    return get_cellar_out_data(db_conn=db_conn, params=params, where=where)
