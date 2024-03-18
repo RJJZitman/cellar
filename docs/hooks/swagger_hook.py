@@ -1,5 +1,5 @@
-from src.api.main import app
-from src.api.ApiSwaggerModifier import ApiModifier
+from api.main import app
+from api.ApiSwaggerModifier import ApiModifier
 
 swagger_hook = ApiModifier(app=app)
 swagger_hook.save_openapi(
@@ -12,3 +12,4 @@ swagger_hook.save_openapi(
         "invalid host for testing purposes.",
     ],
 )
+
