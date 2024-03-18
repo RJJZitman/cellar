@@ -42,13 +42,13 @@ app.include_router(users_router.router)
 app.include_router(cellar_router.router)
 app.include_router(cellar_views_router.router)
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["https://rjjzitman.github.io/cellar/"],  # Allow requests from any origin
-#     allow_credentials=True,
-#     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://rjjzitman.github.io/cellar/"],  # Allow requests from any origin
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 
 @app.get('/', include_in_schema=False)
