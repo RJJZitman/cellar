@@ -1,6 +1,5 @@
 import yaml
 
-from db.mariadb_jdbc import JdbcMariaDB
 from .models import DbConnModel
 from .dependencies import DBConnDep
 
