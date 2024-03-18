@@ -7,7 +7,7 @@ swagger_hook.save_openapi(
     path="docs/assets/",
     title="VinoDB API",
     version="0.1.0",
-    hosts=["http://127.0.0.1:500", "invalid"],
+    hosts=["http://127.0.0.1:8000", "invalid"],
     descriptions=[
         "This host is used for local development.",
         "invalid host for testing purposes.",
