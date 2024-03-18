@@ -35,7 +35,7 @@ add_pagination(app)
 
 with open(f'{SRC}env.yml', 'r') as file:
     env = yaml.safe_load(file)
-# db_setup(db_creds=DB_CREDS, restarted=False)
+db_setup(db_creds=DB_CREDS, restarted=False)
 basic_auth = BasicAuth(auto_error=False)
 
 app.include_router(users_router.router)
