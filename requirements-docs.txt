@@ -4,3 +4,4 @@
  mkdocs-swagger-ui-tag
  mkdocstrings
  mkdocstrings-python
+ .
