@@ -8,6 +8,7 @@ import fastapi.openapi.utils
 
 from fastapi.encoders import jsonable_encoder
 from fastapi_pagination import add_pagination
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 from starlette.responses import RedirectResponse, Response
 from fastapi import FastAPI, Depends, HTTPException, Request
@@ -40,6 +41,14 @@ basic_auth = BasicAuth(auto_error=False)
 app.include_router(users_router.router)
 app.include_router(cellar_router.router)
 app.include_router(cellar_views_router.router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:8000", "https://rjjzitman.github.io/cellar/"],  # Allow requests from any origin
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 
 @app.get('/', include_in_schema=False)
