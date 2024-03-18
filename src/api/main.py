@@ -18,7 +18,7 @@ from db.jdbc_interface import JdbcDbConn
 from .auth_utils import BasicAuth
 from .db_initialisation import db_setup
 from .routers import users_router, cellar_router, cellar_views_router
-from .constants import ACCESS_TOKEN_EXPIRATION_MIN, OPENAPI_URL, SRC, DB_CREDS, DB_CONN
+from .constants import ACCESS_TOKEN_EXPIRATION_MIN, OPENAPI_URL, SRC, DB_CREDS, DB_CONN, SETUP_DB
 from .authentication import get_current_active_user, authenticate_user, create_access_token
 
 from .get_request_body_with_explode import get_request_body_with_explode
@@ -35,7 +35,8 @@ add_pagination(app)
 
 with open(f'{SRC}env.yml', 'r') as file:
     env = yaml.safe_load(file)
-# db_setup(db_creds=DB_CREDS, restarted=False)
+if SETUP_DB:
+    db_setup(db_creds=DB_CREDS, restarted=False)
 basic_auth = BasicAuth(auto_error=False)
 
 app.include_router(users_router.router)
@@ -44,7 +45,7 @@ app.include_router(cellar_views_router.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:8000", "https://rjjzitman.github.io/cellar/"],  # Allow requests from any origin
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],

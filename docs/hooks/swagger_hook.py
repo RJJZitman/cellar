@@ -1,5 +1,5 @@
 from api.main import app
-from api.ApiSwaggerModifier import ApiModifier
+from api.api_swagger_mod import ApiModifier
 
 swagger_hook = ApiModifier(app=app)
 swagger_hook.save_openapi(

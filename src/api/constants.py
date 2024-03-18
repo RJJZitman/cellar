@@ -5,7 +5,6 @@ from .dependencies import DBConnDep
 
 
 OPENAPI_URL = f"/drink_your_wine"
-# SRC = '/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/'
 SRC = 'src/'
 SQL = f'{SRC}sql/'
 
@@ -13,8 +12,8 @@ SQL = f'{SRC}sql/'
 with open(f'{SRC}env.yml', 'r') as file:
     env = yaml.safe_load(file)
 DB_CREDS = DbConnModel(user=env['DB_USER'], password=env['DB_PW'])
-# DB_CONN = DBConnDep(db_creds=DB_CREDS, db_conn_class=JdbcMariaDB)
 DB_CONN = DBConnDep(db_creds=DB_CREDS)
+SETUP_DB = False
 
 JWT_KEY = env['JWT_KEY']
 ALGORITHM = env['JWT_ALGORITHM']
