@@ -8,7 +8,7 @@ OPENAPI_URL = f"/drink_your_wine"
 SRC = 'src/'
 SQL = f'{SRC}sql/'
 
-# Authorization
+# Authorization & DB
 with open(f'{SRC}env.yml', 'r') as file:
     env = yaml.safe_load(file)
 DB_CREDS = DbConnModel(user=env['DB_USER'], password=env['DB_PW'])
