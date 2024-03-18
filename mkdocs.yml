@@ -5,6 +5,7 @@ nav:
   - Database: database.md
   - API: API.md
   - Testing: testing.md
+  - SwaggerUI: swagger_ui.md
 theme:
   name: material
 #  logo: img/i4talent-logo.png
@@ -37,6 +38,7 @@ theme:
 
 plugins: 
   - search
+  - swagger-ui-tag
   - git-authors:
             exclude:
                 - index.md
