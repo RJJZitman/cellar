@@ -6,7 +6,7 @@ from .dependencies import DBConnDep
 
 
 OPENAPI_URL = f"/drink_your_wine"
-SRC = '/Users/Lenna_C02ZL0UYLVDT/Weekeinden/cellar/src/'
+SRC = '../src/'
 SQL = f'{SRC}sql/'
 
 # Authorization
