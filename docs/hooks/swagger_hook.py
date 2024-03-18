@@ -1,5 +1,4 @@
 from api.main import app
-
 from api.ApiSwaggerModifier import ApiModifier
 
 swagger_hook = ApiModifier(app=app)
