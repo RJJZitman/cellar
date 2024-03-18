@@ -1,0 +1,1740 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "VinoDB API",
+    "description": "API to access your wine and beer cellar",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/users/token": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Login For Access Token",
+        "operationId": "login_for_access_token_users_token_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_for_access_token_users_token_post"
+              },
+              "encoding": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/extendedtoken": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Get Extended Access Token",
+        "description": "ADMIN ONLY ENDPOINT\nGenerate an access token with extended expiration date of up to a year. The token can be generated for any user in\nthe database. Only scopes that the intended user is allowed to use can be added to this token.\nRequired scope(s): USERS:READ, USERS:WRITE",
+        "operationId": "get_extended_access_token_users_extendedtoken_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_get_extended_access_token_users_extendedtoken_post"
+              },
+              "encoding": {
+                "scopes": {
+                  "style": "form"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "USERS:WRITE"
+            ]
+          }
+        ]
+      }
+    },
+    "/users/get_users": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Get Users",
+        "description": "Retrieve all registered wine/beer owners.\nRequired scope(s): CELLAR:READ",
+        "operationId": "get_users_users_get_users_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OwnerModel"
+                  },
+                  "type": "array",
+                  "title": "Response Get Users Users Get Users Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/users/add": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Add User",
+        "description": "ADMIN ONLY ENDPOINT\nAdd new wine/beer owner to the DB.\nRequired scope(s): USERS:READ, USERS:WRITE",
+        "operationId": "add_user_users_add_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewOwnerModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Add User Users Add Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "USERS:WRITE"
+            ]
+          }
+        ]
+      }
+    },
+    "/users/delete": {
+      "delete": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Delete User",
+        "description": "ADMIN ONLY ENDPOINT\nDelete existing wine/beer owner to the DB.\nRequired scope(s): USERS:READ, USERS:WRITE",
+        "operationId": "delete_user_users_delete_delete",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Delete Username"
+            },
+            "name": "delete_username",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Delete User Users Delete Delete"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "USERS:WRITE"
+            ]
+          }
+        ]
+      }
+    },
+    "/users/update": {
+      "patch": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Update User",
+        "description": "ADMIN ONLY ENDPOINT\nUpdates existing wine/beer owner in the DB.\nRequired scope(s): USERS:READ, USERS:WRITE",
+        "operationId": "update_user_users_update_patch",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Current Username"
+            },
+            "name": "current_username",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOwnerModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Update User Users Update Patch"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "USERS:WRITE"
+            ]
+          }
+        ]
+      }
+    },
+    "/cellar/storages/add": {
+      "post": {
+        "tags": [
+          "cellar"
+        ],
+        "summary": "Post Storage Unit",
+        "description": "Add a storage unit to the DB.\n\nRequired scope(s): CELLAR:READ, CELLAR:WRITE",
+        "operationId": "post_storage_unit_cellar_storages_add_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StorageInModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Post Storage Unit Cellar Storages Add Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ",
+              "CELLAR:WRITE"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar/storages/delete": {
+      "delete": {
+        "tags": [
+          "cellar"
+        ],
+        "summary": "Delete Storage Unit",
+        "description": "Delete a storage unit to the DB. Provide the location and description of the storage unit to select which unit\nshould be deleted. Make sure that the storage unit is empty whenever you want to remove it.\n\nRequired scope(s): CELLAR:READ, CELLAR:WRITE",
+        "operationId": "delete_storage_unit_cellar_storages_delete_delete",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "title": "Location"
+            },
+            "name": "location",
+            "in": "query"
+          },
+          {
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "title": "Description"
+            },
+            "name": "description",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Delete Storage Unit Cellar Storages Delete Delete"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ",
+              "CELLAR:WRITE"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar/wine_in_cellar/add": {
+      "post": {
+        "tags": [
+          "cellar"
+        ],
+        "summary": "Add Wine To Cellar",
+        "description": "Adds bottles to your cellar. Make sure to provide the correct storage unit ID. You can check what storages you can\nadd wines to from the '/storages/get' endpoint.\n\nRequired scope(s): CELLAR:READ, CELLAR:WRITE",
+        "operationId": "add_wine_to_cellar_cellar_wine_in_cellar_add_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CellarInModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Add Wine To Cellar Cellar Wine In Cellar Add Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ",
+              "CELLAR:WRITE"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar/wine_in_cellar/add_rating": {
+      "post": {
+        "tags": [
+          "cellar"
+        ],
+        "summary": "Add A Rating",
+        "description": "Adds a rating to your DB. Note that if you've drunk a bottle, you can make use of the '/wine_in_cellar/consumed'\nendpoint to both add a rating and update your storage.\n\nRequired scope(s): CELLAR:READ, CELLAR:WRITE",
+        "operationId": "add_a_rating_cellar_wine_in_cellar_add_rating_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wine Id"
+            },
+            "name": "wine_id",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatingModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Add A Rating Cellar Wine In Cellar Add Rating Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ",
+              "CELLAR:WRITE"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar/wine_in_cellar/consumed": {
+      "patch": {
+        "tags": [
+          "cellar"
+        ],
+        "summary": "Remove Consumed From Stock",
+        "description": "Removes a bottle from your cellar, if the 'rate_bottle' flag is set to True, the rating argument is required, else\nit will be ignored and can be left in the default state.\n\nRequired scope(s): CELLAR:READ, CELLAR:WRITE",
+        "operationId": "remove_consumed_from_stock_cellar_wine_in_cellar_consumed_patch",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Rate Bottle",
+              "default": true
+            },
+            "name": "rate_bottle",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_remove_consumed_from_stock_cellar_wine_in_cellar_consumed_patch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Remove Consumed From Stock Cellar Wine In Cellar Consumed Patch"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ",
+              "CELLAR:WRITE"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar/wine_in_cellar/move": {
+      "patch": {
+        "tags": [
+          "cellar"
+        ],
+        "summary": "Move Bottle To Other Storage",
+        "description": "Move a bottle from one storage unit to another.\n\nRequired scope(s): CELLAR:READ, CELLAR:WRITE",
+        "operationId": "move_bottle_to_other_storage_cellar_wine_in_cellar_move_patch",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Cellar Id"
+            },
+            "name": "cellar_id",
+            "in": "query"
+          },
+          {
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "New Storage Unit"
+            },
+            "name": "new_storage_unit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "title": "Response Move Bottle To Other Storage Cellar Wine In Cellar Move Patch"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ",
+              "CELLAR:WRITE"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar_views/owners/get_your_id": {
+      "get": {
+        "tags": [
+          "cellar_views"
+        ],
+        "summary": "Get Owners",
+        "description": "Retrieve your ID.\n\nRequired scope(s): CELLAR:READ",
+        "operationId": "get_owners_cellar_views_owners_get_your_id_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "title": "Response Get Owners Cellar Views Owners Get Your Id Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar_views/storages/get": {
+      "get": {
+        "tags": [
+          "cellar_views"
+        ],
+        "summary": "Get Storage Units",
+        "description": "Retrieve all your storage units registered within the DB.\n\nRequired scope(s): CELLAR:READ",
+        "operationId": "get_storage_units_cellar_views_storages_get_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StorageOutModel"
+                  },
+                  "type": "array",
+                  "title": "Response Get Storage Units Cellar Views Storages Get Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar_views/wine_in_cellar/get_wine_ratings": {
+      "get": {
+        "tags": [
+          "cellar_views"
+        ],
+        "summary": "Get Wine Rating",
+        "description": "Retrieves ratings for a specific wine/bottle. Make sure to set the 'only_your_ratings' to True if you only want\nto see your ratings on the wine. If set to False, all ratings will be given.\n\nRequired scope(s): CELLAR:READ",
+        "operationId": "get_wine_rating_cellar_views_wine_in_cellar_get_wine_ratings_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wine Id"
+            },
+            "name": "wine_id",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "title": "Only Your Ratings",
+              "default": true
+            },
+            "name": "only_your_ratings",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RatingInDbModel"
+                  },
+                  "type": "array",
+                  "title": "Response Get Wine Rating Cellar Views Wine In Cellar Get Wine Ratings Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar_views/wine_in_cellar/get_your_ratings": {
+      "get": {
+        "tags": [
+          "cellar_views"
+        ],
+        "summary": "Get Your Ratings",
+        "description": "Retrieves all your ratings for all wines/bottles.\n\nRequired scope(s): CELLAR:READ",
+        "operationId": "get_your_ratings_cellar_views_wine_in_cellar_get_your_ratings_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RatingInDbModel"
+                  },
+                  "type": "array",
+                  "title": "Response Get Your Ratings Cellar Views Wine In Cellar Get Your Ratings Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar_views/wine_in_cellar/get_your_bottles": {
+      "get": {
+        "tags": [
+          "cellar_views"
+        ],
+        "summary": "Get Your Bottles",
+        "description": "Get an overview of all your bottles stored in your cellar. If the 'storage_unit' id is specified, only the bottles\nin that specific storage unit are shown.\n\nRequired scope(s): CELLAR:READ",
+        "operationId": "get_your_bottles_cellar_views_wine_in_cellar_get_your_bottles_get",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Storage Unit"
+            },
+            "name": "storage_unit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CellarOutModel"
+                  },
+                  "type": "array",
+                  "title": "Response Get Your Bottles Cellar Views Wine In Cellar Get Your Bottles Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar_views/wine_in_cellar/get_stock_on_bottle": {
+      "get": {
+        "tags": [
+          "cellar_views"
+        ],
+        "summary": "Get Stock On Bottle",
+        "description": "Get an overview of all your bottles of a specific wine stored in your cellar.\n\nRequired scope(s): CELLAR:READ",
+        "operationId": "get_stock_on_bottle_cellar_views_wine_in_cellar_get_stock_on_bottle_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Wine Id"
+            },
+            "name": "wine_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CellarOutModel"
+                  },
+                  "type": "array",
+                  "title": "Response Get Stock On Bottle Cellar Views Wine In Cellar Get Stock On Bottle Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    },
+    "/cellar_views/wine_in_cellar/drink_in_window": {
+      "get": {
+        "tags": [
+          "cellar_views"
+        ],
+        "summary": "Get Bottle Open Window",
+        "description": "Retrieve all bottles that are drinkable now or within a specified year. The returned list of drink-ready bottles\ncan be trimmed by specifying a certain beverage_type.\n\nRequired scope(s): CELLAR:READ",
+        "operationId": "get_bottle_open_window_cellar_views_wine_in_cellar_drink_in_window_get",
+        "parameters": [
+          {
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "title": "Drink Year"
+            },
+            "name": "drink_year",
+            "in": "query"
+          },
+          {
+            "required": false,
+            "schema": {
+              "type": "string",
+              "title": "Beverage Type"
+            },
+            "name": "beverage_type",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CellarOutModel"
+                  },
+                  "type": "array",
+                  "title": "Response Get Bottle Open Window Cellar Views Wine In Cellar Drink In Window Get"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearerCookie": [
+              "CELLAR:READ"
+            ]
+          },
+          {
+            "OAuth2PasswordBearerCookie": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_get_extended_access_token_users_extendedtoken_post": {
+        "properties": {
+          "token_user": {
+            "type": "string",
+            "title": "Token User"
+          },
+          "scopes": {
+            "items": {
+              "$ref": "#/components/schemas/ScopesType"
+            },
+            "type": "array"
+          },
+          "days_valid": {
+            "type": "integer",
+            "maximum": 365.0,
+            "minimum": 1.0,
+            "title": "Days Valid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "token_user",
+          "scopes",
+          "days_valid"
+        ],
+        "title": "Body_get_extended_access_token_users_extendedtoken_post"
+      },
+      "Body_login_for_access_token_users_token_post": {
+        "properties": {
+          "grant_type": {
+            "type": "string",
+            "pattern": "password",
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "type": "string",
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "type": "string",
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_for_access_token_users_token_post"
+      },
+      "Body_remove_consumed_from_stock_cellar_wine_in_cellar_consumed_patch": {
+        "properties": {
+          "bottle_data": {
+            "$ref": "#/components/schemas/ConsumedBottleModel"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/RatingModel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bottle_data"
+        ],
+        "title": "Body_remove_consumed_from_stock_cellar_wine_in_cellar_consumed_patch"
+      },
+      "CellarInModel": {
+        "properties": {
+          "storage_unit": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Storage Unit"
+          },
+          "bottle_size_cl": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Bottle Size Cl",
+            "default": 75
+          },
+          "quantity": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity"
+          },
+          "wine_info": {
+            "$ref": "#/components/schemas/WinesModel"
+          }
+        },
+        "type": "object",
+        "required": [
+          "storage_unit",
+          "quantity",
+          "wine_info"
+        ],
+        "title": "CellarInModel"
+      },
+      "CellarOutModel": {
+        "properties": {
+          "cellar_id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Cellar Id"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Name"
+          },
+          "vintage": {
+            "type": "integer",
+            "exclusiveMaximum": 3000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Vintage",
+            "default": 2024
+          },
+          "storage_unit": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Storage Unit"
+          },
+          "bottle_size_cl": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Bottle Size Cl",
+            "default": 75
+          },
+          "quantity": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity"
+          },
+          "wine_id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Wine Id"
+          },
+          "owner_id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Owner Id"
+          },
+          "drink_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Drink From",
+            "description": "The year from which you would suggest drinking the wine."
+          },
+          "drink_before": {
+            "type": "string",
+            "format": "date",
+            "title": "Drink Before",
+            "description": "The last year in which you would suggest drinking the wine."
+          }
+        },
+        "type": "object",
+        "required": [
+          "cellar_id",
+          "name",
+          "storage_unit",
+          "quantity",
+          "wine_id",
+          "owner_id",
+          "drink_before"
+        ],
+        "title": "CellarOutModel"
+      },
+      "ConsumedBottleModel": {
+        "properties": {
+          "wine_id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Wine Id"
+          },
+          "storage_unit": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Storage Unit"
+          },
+          "bottle_size_cl": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Bottle Size Cl",
+            "default": 75
+          },
+          "quantity": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "wine_id",
+          "storage_unit",
+          "quantity"
+        ],
+        "title": "ConsumedBottleModel"
+      },
+      "GeographicInfoModel": {
+        "properties": {
+          "country": {
+            "type": "string",
+            "title": "Country",
+            "description": "Country of origin."
+          },
+          "region": {
+            "type": "string",
+            "title": "Region",
+            "description": "Origin region.",
+            "default": "None"
+          },
+          "additional_info": {
+            "type": "string",
+            "title": "Additional Info",
+            "description": "Extra information e.g., producer, specific vineyard(s).",
+            "default": "None"
+          }
+        },
+        "type": "object",
+        "required": [
+          "country"
+        ],
+        "title": "GeographicInfoModel"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NewOwnerModel": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "scopes": {
+            "type": "string",
+            "title": "Scopes"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin",
+            "default": false
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "username",
+          "password"
+        ],
+        "title": "NewOwnerModel"
+      },
+      "OwnerModel": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "scopes": {
+            "type": "string",
+            "title": "Scopes"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin",
+            "default": false
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "username"
+        ],
+        "title": "OwnerModel"
+      },
+      "RatingInDbModel": {
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "maximum": 100.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Rating",
+            "description": "Rating on the Robert Parker scale",
+            "default": 1
+          },
+          "drinking_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Drinking Date",
+            "description": "When did you drink the rated beverage?"
+          },
+          "comments": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Comments",
+            "description": "Any additional comments such as tasting notes can be placed here.",
+            "default": "None"
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Id"
+          },
+          "rater_id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Rater Id"
+          },
+          "wine_id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Wine Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "drinking_date",
+          "id",
+          "rater_id",
+          "wine_id"
+        ],
+        "title": "RatingInDbModel"
+      },
+      "RatingModel": {
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "maximum": 100.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Rating",
+            "description": "Rating on the Robert Parker scale",
+            "default": 1
+          },
+          "drinking_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Drinking Date",
+            "description": "When did you drink the rated beverage?"
+          },
+          "comments": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Comments",
+            "description": "Any additional comments such as tasting notes can be placed here.",
+            "default": "None"
+          }
+        },
+        "type": "object",
+        "required": [
+          "drinking_date"
+        ],
+        "title": "RatingModel"
+      },
+      "ScopesType": {
+        "type": "string",
+        "enum": [
+          "USERS:WRITE",
+          "USERS:READ",
+          "CELLAR:WRITE",
+          "CELLAR:READ"
+        ],
+        "title": "ScopesType",
+        "description": "An enumeration."
+      },
+      "StorageInModel": {
+        "properties": {
+          "location": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Location"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "description"
+        ],
+        "title": "StorageInModel"
+      },
+      "StorageOutModel": {
+        "properties": {
+          "location": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Location"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Description"
+          },
+          "id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Id"
+          },
+          "owner_id": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Owner Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "description",
+          "owner_id"
+        ],
+        "title": "StorageOutModel"
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "token_type"
+        ],
+        "title": "Token"
+      },
+      "UpdateOwnerModel": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "default": "None"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "default": "None"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "default": "None"
+          },
+          "scopes": {
+            "type": "string",
+            "title": "Scopes",
+            "default": "None"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin",
+            "default": false
+          },
+          "enabled": {
+            "type": "boolean",
+            "title": "Enabled",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "UpdateOwnerModel"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "WinesModel": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Name"
+          },
+          "vintage": {
+            "type": "integer",
+            "exclusiveMaximum": 3000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Vintage",
+            "default": 2024
+          },
+          "grapes": {
+            "type": "string",
+            "title": "Grapes",
+            "description": "Provide a comma ',' separated list of all grapes in the wine. This is not enforced in any way, but suggested as an intuitively readable format. Add as many details as you wish e.g., the percentage per grape for blends. Note that t his field can be left empty for beers.",
+            "default": "None"
+          },
+          "type": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Type",
+            "description": "Wine examples: red, rose, white, fortified.\nBeer examples: stout, (BA) barley wine, Imp.Russian stout"
+          },
+          "drink_from": {
+            "type": "string",
+            "format": "date",
+            "title": "Drink From",
+            "description": "The year from which you would suggest drinking the wine."
+          },
+          "drink_before": {
+            "type": "string",
+            "format": "date",
+            "title": "Drink Before",
+            "description": "The last year in which you would suggest drinking the wine."
+          },
+          "alcohol_vol_perc": {
+            "type": "number",
+            "exclusiveMaximum": 100.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Alcohol Vol Perc",
+            "default": 13.5
+          },
+          "geographic_info": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GeographicInfoModel"
+              }
+            ],
+            "title": "Geographic Info",
+            "description": "Any information on the geographic origins of the bottle."
+          },
+          "quality_signature": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Quality Signature",
+            "description": "The wine appellation. Can be left empty for beers or wines without an appellation.",
+            "default": "None"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "type",
+          "drink_before",
+          "geographic_info"
+        ],
+        "title": "WinesModel"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearerCookie": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {
+              "USERS:WRITE": "allows writes on users router scope",
+              "USERS:READ": "allows reads on users router scope",
+              "CELLAR:WRITE": "allows writes on cellar router scope",
+              "CELLAR:READ": "allows reads on cellar router scope"
+            },
+            "tokenUrl": "users/token"
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8000",
+      "description": "This host is used for local development."
+    },
+    {
+      "url": "invalid",
+      "description": "invalid host for testing purposes."
+    }
+  ]
+}
