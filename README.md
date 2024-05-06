@@ -34,7 +34,9 @@ MariaDB within the testing scope and (quite naturally) pydantic for validating t
 Finally, JWT is used for the encoding and decoding of API access tokens.
 
 Docs refs:
+
 * FastAPI
+
   * https://fastapi.tiangolo.com
   * https://fastapi.tiangolo.com/tutorial/testing/
 * MariaDB
@@ -66,6 +68,7 @@ Create a file called 'env.yml' directly in the 'src' directory and a 'test_env.y
 The env.yml file will actually be used by the API. The test_env.yml file is used within the scope of code tests. For 
 simplicity's sake, it is advised to use rather simple user credentials for the testing scope e.g., admin:admin. 
 Both of these files should contain the following information:
+
 * DB_USER
   * The MariaDB username of your python mariadb user.
   * Should be a string.
